@@ -7,8 +7,11 @@ from src.config import load_channel_config
 from src.intelligence import IntelligenceAgent
 from src.opportunity import OpportunityEngine
 from src.output import write_json, write_summary
+from src.production import ProductionPlanner
 from src.research import ResearchAgent
+from src.script import ScriptAgent
 from src.strategy import StrategyAgent
+from src.thumbnail import ThumbnailAgent
 from src.transcripts import TranscriptAgent
 from src.youtube import YouTubeResearchAgent
 
@@ -21,6 +24,9 @@ def main() -> None:
     parser.add_argument("--transcripts", action="store_true", help="Attempt transcript retrieval.")
     parser.add_argument("--analyze", action="store_true", help="Run LLM intelligence analysis.")
     parser.add_argument("--brief", action="store_true", help="Generate a brief for the top opportunity.")
+    parser.add_argument("--script", action="store_true", help="Generate a script from the generated brief.")
+    parser.add_argument("--production", action="store_true", help="Generate a production plan from the script.")
+    parser.add_argument("--thumbnail", action="store_true", help="Generate thumbnail concepts from the brief.")
     parser.add_argument("--max-results", type=int, default=10)
     args = parser.parse_args()
 
@@ -54,9 +60,23 @@ def main() -> None:
     write_json("opportunities.json", opportunities)
     write_json("strategy.json", strategy)
 
-    if args.brief and opportunities:
+    brief = {}
+    if (args.brief or args.script or args.production or args.thumbnail) and opportunities:
         brief = VideoBriefAgent(config).create(opportunities[0], intelligence)
         write_json("video_brief.json", brief)
+
+    script = {}
+    if (args.script or args.production) and brief:
+        script = ScriptAgent(config).generate(brief)
+        write_json("script.json", script)
+
+    if args.production and script:
+        production_plan = ProductionPlanner().build(script)
+        write_json("production_plan.json", production_plan)
+
+    if args.thumbnail and brief:
+        thumbnail = ThumbnailAgent(config).generate(brief)
+        write_json("thumbnail_concepts.json", thumbnail)
 
     summary = write_summary(config.name, len(research), opportunities, strategy)
 
