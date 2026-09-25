@@ -1,0 +1,38 @@
+channel:
+  name: "My New YouTube Channel"
+  niche: "Change this to your niche"
+  description: "A new channel focused on useful, differentiated videos for a clearly defined audience."
+
+audience:
+  primary: "Describe the ideal viewer"
+  pain_points:
+    - "Problem they repeatedly experience"
+    - "Question they repeatedly ask"
+    - "Outcome they want"
+  sophistication: "beginner"
+
+goals:
+  primary: "Build an audience"
+  secondary:
+    - "Create a repeatable content engine"
+    - "Build long-term monetization options"
+
+content:
+  formats:
+    - "long_form"
+    - "short_form"
+  target_minutes: 8
+  publishing_frequency_per_week: 2
+  pillars:
+    - "Pillar 1"
+    - "Pillar 2"
+    - "Pillar 3"
+
+monetization:
+  primary: "future"
+  offers: []
+
+constraints:
+  faceless: true
+  human_approval_before_publish: true
+  avoid_claims_without_evidence: true
