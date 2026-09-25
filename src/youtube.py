@@ -66,7 +66,46 @@ class YouTubeResearchAgent:
                     )
                 )
 
+        if not results:
+            return results
+
+        video_ids = [item.metadata["video_id"] for item in results]
+        stats = self._fetch_video_stats(video_ids)
+
+        for item in results:
+            item.metadata.update(stats.get(item.metadata["video_id"], {}))
+
         return results
+
+    def _fetch_video_stats(self, video_ids: list[str]) -> dict[str, dict[str, Any]]:
+        stats: dict[str, dict[str, Any]] = {}
+
+        for start in range(0, len(video_ids), 50):
+            batch = video_ids[start:start + 50]
+            params = {
+                "part": "statistics,contentDetails",
+                "id": ",".join(batch),
+                "key": self.api_key,
+            }
+            response = requests.get(
+                YOUTUBE_VIDEOS_URL,
+                params=params,
+                timeout=30,
+            )
+            response.raise_for_status()
+
+            for item in response.json().get("items", []):
+                video_id = item.get("id")
+                statistics = item.get("statistics", {})
+                content_details = item.get("contentDetails", {})
+                stats[video_id] = {
+                    "view_count": int(statistics.get("viewCount", 0) or 0),
+                    "like_count": int(statistics.get("likeCount", 0) or 0),
+                    "comment_count": int(statistics.get("commentCount", 0) or 0),
+                    "duration": content_details.get("duration"),
+                }
+
+        return stats
 
     @staticmethod
     def build_queries(config: ChannelConfig) -> list[str]:
