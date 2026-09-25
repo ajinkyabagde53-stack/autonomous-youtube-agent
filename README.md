@@ -114,7 +114,8 @@ main.py          Pipeline entry point
 ### Phase 5 — Learning
 - [x] Analytics data model and feedback-loop foundation
 - [ ] CTR and retention analysis
-- [ ] Topic performance memory
+- [x] Topic performance memory
+- [x] Analytics learning-loop command
 - [ ] Automated strategy updates
 
 ## Quick start
