@@ -4,7 +4,11 @@ import argparse
 
 from src.brief import VideoBriefAgent
 from src.config import load_channel_config
+from src.analytics import VideoPerformance
 from src.intelligence import IntelligenceAgent
+from src.learning import LearningAgent
+from src.memory import MemoryStore
+from src.youtube_analytics import YouTubeAnalyticsAdapter
 from src.opportunity import OpportunityEngine
 from src.output import write_json, write_summary
 from src.production import ProductionPlanner
@@ -27,6 +31,9 @@ def main() -> None:
     parser.add_argument("--script", action="store_true", help="Generate a script from the generated brief.")
     parser.add_argument("--production", action="store_true", help="Generate a production plan from the script.")
     parser.add_argument("--thumbnail", action="store_true", help="Generate thumbnail concepts from the brief.")
+    parser.add_argument("--learn", action="store_true", help="Build channel memory from supplied performance data.")
+    parser.add_argument("--analytics-start", default=None, help="Analytics start date: YYYY-MM-DD.")
+    parser.add_argument("--analytics-end", default=None, help="Analytics end date: YYYY-MM-DD.")
     parser.add_argument("--max-results", type=int, default=10)
     args = parser.parse_args()
 
@@ -77,6 +84,17 @@ def main() -> None:
     if args.thumbnail and brief:
         thumbnail = ThumbnailAgent(config).generate(brief)
         write_json("thumbnail_concepts.json", thumbnail)
+
+    if args.learn and args.analytics_start and args.analytics_end:
+        performance = YouTubeAnalyticsAdapter().fetch_recent(
+            args.analytics_start,
+            args.analytics_end,
+        )
+        write_json("analytics.json", performance)
+
+        memory = LearningAgent().build_memory(performance)
+        MemoryStore().save(memory)
+        write_json("learning_summary.json", memory)
 
     summary = write_summary(config.name, len(research), opportunities, strategy)
 
