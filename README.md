@@ -95,13 +95,13 @@ main.py          Pipeline entry point
 - [x] Audience intelligence foundation
 - [ ] Reddit/search adapters
 - [ ] Competitor analysis
-- [ ] Hook and title pattern extraction
+- [x] Hook and title pattern extraction foundation
 
 ### Phase 3 — Production
 - [x] Video brief generator
-- [ ] Script generation
-- [ ] Visual planning
-- [ ] Thumbnail brief generation
+- [x] Script generation
+- [x] Visual planning
+- [x] Thumbnail brief generation
 - [ ] Voice generation adapter
 - [ ] Video rendering adapter
 
