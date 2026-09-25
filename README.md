@@ -90,15 +90,15 @@ main.py          Pipeline entry point
 - [x] Basic tests
 
 ### Phase 2 — Intelligence
-- [ ] Live YouTube research
-- [ ] Transcript ingestion
-- [ ] Audience question mining
+- [x] Live YouTube research adapter
+- [x] Transcript ingestion adapter
+- [x] Audience intelligence foundation
 - [ ] Reddit/search adapters
 - [ ] Competitor analysis
 - [ ] Hook and title pattern extraction
 
 ### Phase 3 — Production
-- [ ] Video brief generator
+- [x] Video brief generator
 - [ ] Script generation
 - [ ] Visual planning
 - [ ] Thumbnail brief generation
@@ -112,7 +112,7 @@ main.py          Pipeline entry point
 - [ ] Publishing safeguards
 
 ### Phase 5 — Learning
-- [ ] YouTube Analytics ingestion
+- [x] Analytics data model and feedback-loop foundation
 - [ ] CTR and retention analysis
 - [ ] Topic performance memory
 - [ ] Automated strategy updates
