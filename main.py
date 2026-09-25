@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 
+from src.brief import VideoBriefAgent
 from src.config import load_channel_config
+from src.intelligence import IntelligenceAgent
 from src.opportunity import OpportunityEngine
 from src.output import write_json, write_summary
 from src.research import ResearchAgent
@@ -15,20 +17,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Autonomous YouTube Agent.")
     parser.add_argument("--channel-config", default="config/channel.yaml")
     parser.add_argument("--research-dir", default="research")
-    parser.add_argument("--youtube", action="store_true", help="Use the YouTube Data API when YOUTUBE_API_KEY is set.")
-    parser.add_argument("--transcripts", action="store_true", help="Attempt transcript retrieval for YouTube results.")
+    parser.add_argument("--youtube", action="store_true", help="Use the YouTube Data API.")
+    parser.add_argument("--transcripts", action="store_true", help="Attempt transcript retrieval.")
+    parser.add_argument("--analyze", action="store_true", help="Run LLM intelligence analysis.")
+    parser.add_argument("--brief", action="store_true", help="Generate a brief for the top opportunity.")
     parser.add_argument("--max-results", type=int, default=10)
     args = parser.parse_args()
 
     config = load_channel_config(args.channel_config)
-
     local_agent = ResearchAgent(config, args.research_dir)
     research = local_agent.normalize(local_agent.collect())
 
     if args.youtube:
         youtube_agent = YouTubeResearchAgent(config)
-        queries = youtube_agent.build_queries(config)
-        live_items = youtube_agent.search(queries, args.max_results)
+        live_items = youtube_agent.search(
+            youtube_agent.build_queries(config),
+            args.max_results,
+        )
         research = local_agent.normalize([*research, *live_items])
 
         if args.transcripts:
@@ -40,6 +45,16 @@ def main() -> None:
     write_json("research.json", research)
     write_json("opportunities.json", opportunities)
     write_json("strategy.json", strategy)
+
+    intelligence = {}
+    if args.analyze:
+        intelligence = IntelligenceAgent(config).analyze(research)
+        write_json("intelligence.json", intelligence)
+
+    if args.brief and opportunities:
+        brief = VideoBriefAgent(config).create(opportunities[0], intelligence)
+        write_json("video_brief.json", brief)
+
     summary = write_summary(config.name, len(research), opportunities, strategy)
 
     print(f"Channel: {config.name}")
