@@ -39,17 +39,20 @@ def main() -> None:
         if args.transcripts:
             research = TranscriptAgent().enrich(research)
 
-    opportunities = OpportunityEngine(config).generate(research)
+    intelligence = {}
+    if args.analyze:
+        intelligence = IntelligenceAgent(config).analyze(research)
+        write_json("intelligence.json", intelligence)
+
+    opportunities = OpportunityEngine(config).generate(
+        research,
+        intelligence,
+    )
     strategy = StrategyAgent(config).build(opportunities)
 
     write_json("research.json", research)
     write_json("opportunities.json", opportunities)
     write_json("strategy.json", strategy)
-
-    intelligence = {}
-    if args.analyze:
-        intelligence = IntelligenceAgent(config).analyze(research)
-        write_json("intelligence.json", intelligence)
 
     if args.brief and opportunities:
         brief = VideoBriefAgent(config).create(opportunities[0], intelligence)
