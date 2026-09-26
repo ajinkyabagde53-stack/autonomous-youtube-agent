@@ -1,0 +1,28 @@
+runtime:
+  mode: "local"
+  human_approval_before_publish: true
+
+storage:
+  provider: "local_filesystem"
+  root: "data/assets"
+
+database:
+  provider: "sqlite"
+  path: "data/agent.db"
+
+scheduler:
+  provider: "local_scheduler"
+
+agents:
+  research: true
+  intelligence: true
+  opportunity: true
+  strategy: true
+  brief: true
+  script: true
+  production: true
+  thumbnail: true
+  qa: true
+  publishing: false
+  analytics: true
+  learning: true
