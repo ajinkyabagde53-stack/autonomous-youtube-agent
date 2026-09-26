@@ -22,7 +22,7 @@
         <a href="#memory">Memory</a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="status-dot"><i></i> Local runtime online</div>
+        <div class="status-dot" id="runtime-status"><i></i> Local runtime online</div>
         <div class="mini-user">AB <span>Ajinkya</span></div>
       </div>
     </aside>
@@ -41,29 +41,29 @@
         <div class="hero-card">
           <div class="hero-head">
             <div>
-              <span class="pill live">LIVE RUN</span>
-              <h2>Finding the next opportunity</h2>
+              <span class="pill live" id="run-pill">READY</span>
+              <h2 id="run-title">Ready for a run</h2>
             </div>
-            <span class="timestamp">2m ago</span>
+            <span class="timestamp" id="run-time">Not started</span>
           </div>
           <div class="pipeline">
-            <div class="stage done"><b>✓</b><span>Research</span></div>
+            <div class="stage" data-stage="research"><b>01</b><span>Research</span></div>
             <div class="line done"></div>
-            <div class="stage done"><b>✓</b><span>Intelligence</span></div>
+            <div class="stage" data-stage="intelligence"><b>02</b><span>Intelligence</span></div>
             <div class="line done"></div>
-            <div class="stage active"><b>03</b><span>Opportunity</span></div>
+            <div class="stage" data-stage="opportunity"><b>03</b><span>Opportunity</span></div>
             <div class="line"></div>
-            <div class="stage"><b>04</b><span>Strategy</span></div>
+            <div class="stage" data-stage="strategy"><b>04</b><span>Strategy</span></div>
             <div class="line"></div>
-            <div class="stage"><b>05</b><span>Script</span></div>
+            <div class="stage" data-stage="script"><b>05</b><span>Script</span></div>
             <div class="line"></div>
-            <div class="stage"><b>06</b><span>Production</span></div>
+            <div class="stage" data-stage="production"><b>06</b><span>Production</span></div>
           </div>
           <div class="run-detail">
-            <div><span>Sources scanned</span><strong>184</strong></div>
-            <div><span>Signals found</span><strong>31</strong></div>
-            <div><span>Opportunities</span><strong>8</strong></div>
-            <div><span>Est. run cost</span><strong>$0.84</strong></div>
+            <div><span>Sources scanned</span><strong id="sources-count">0</strong></div>
+            <div><span>Signals found</span><strong id="signals-count">—</strong></div>
+            <div><span>Opportunities</span><strong id="opportunity-count">0</strong></div>
+            <div><span>Run cost</span><strong id="run-cost">API</strong></div>
           </div>
         </div>
 
@@ -81,7 +81,7 @@
           <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>What the agent wants to make</h2></div>
           <button class="ghost" onclick="showToast('Opportunity queue refreshed')">Refresh</button>
         </div>
-        <div class="opportunity-list">
+        <div class="opportunity-list" id="opportunity-list">
           <article class="opportunity featured">
             <div class="score">92</div>
             <div class="opp-main">
