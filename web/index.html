@@ -32,9 +32,27 @@
         <div>
           <p class="eyebrow">CHANNEL CONTROL CENTER</p>
           <h1>Good evening, Ajinkya.</h1>
-          <p class="muted">Your agent is researching, learning and preparing the next video.</p>
+          <p class="muted">Choose a research territory. Overseer finds the strongest content gap inside it.</p>
         </div>
-        <button class="primary" onclick="runAgent()">Run agent <span>↗</span></button>
+        <div class="run-controls">
+          <label class="genre-label">
+            <span>Research genre</span>
+            <select id="genre-select">
+              <option value="AI productivity">AI Productivity</option>
+              <option value="AI tools">AI Tools</option>
+              <option value="AI agents">AI Agents</option>
+              <option value="AI automation">AI Automation</option>
+              <option value="AI for marketing">AI for Marketing</option>
+              <option value="AI for business">AI for Business</option>
+              <option value="AI for creators">AI for Creators</option>
+              <option value="AI comparisons">AI Comparisons</option>
+              <option value="AI news and trends">AI News & Trends</option>
+              <option value="custom">Custom genre…</option>
+            </select>
+          </label>
+          <input id="custom-genre" class="genre-input" type="text" placeholder="e.g. AI agents for sales" hidden />
+          <button class="primary" id="run-agent">Find content gap <span>↗</span></button>
+        </div>
       </header>
 
       <section id="overview" class="hero-grid">
@@ -78,7 +96,7 @@
 
       <section id="opportunities" class="section">
         <div class="section-head">
-          <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>What the agent wants to make</h2></div>
+          <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>Content gaps in your genre</h2></div>
           <button class="ghost" onclick="showToast('Opportunity queue refreshed')">Refresh</button>
         </div>
         <div class="opportunity-list" id="opportunity-list">
