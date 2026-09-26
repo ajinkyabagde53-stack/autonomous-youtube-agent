@@ -149,7 +149,7 @@ Copy `.env.example` to `.env` and add:
 
 The YouTube adapter uses public search/video endpoints and a small, quota-conscious
 sample. Google's current documentation lists `search.list` at 1 quota unit per
-call and `videos.list` at 1 unit per call. citeturn0search0turn0search3
+call and `videos.list` at 1 unit per call.
 
 ### Windows dashboard
 
