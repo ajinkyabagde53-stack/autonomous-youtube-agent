@@ -118,7 +118,49 @@ main.py          Pipeline entry point
 - [x] Analytics learning-loop command
 - [ ] Automated strategy updates
 
-## Quick start
+## Overseer local control center
+
+Overseer is now designed to run **local-first** on your Windows PC. The dashboard
+lets you choose a research genre before every run. The opportunity engine then
+scores content gaps inside that genre rather than selecting an unrelated topic
+from the whole channel.
+
+Example flow:
+
+```text
+Choose genre
+   ↓
+YouTube research
+   ↓
+Audience/content intelligence
+   ↓
+Gap candidates
+   ↓
+Opportunity scoring
+   ↓
+Top opportunities for human review
+```
+
+### Live research keys
+
+Copy `.env.example` to `.env` and add:
+- `YOUTUBE_API_KEY` for public YouTube research.
+- `ANTHROPIC_API_KEY` for semantic gap analysis and candidate generation.
+
+The YouTube adapter uses public search/video endpoints and a small, quota-conscious
+sample. Google's current documentation lists `search.list` at 1 quota unit per
+call and `videos.list` at 1 unit per call. citeturn0search0turn0search3
+
+### Windows dashboard
+
+```powershell
+git pull
+.scriptsstart_dashboard.ps1
+```
+
+Then open `http://localhost:3000`.
+
+
 
 ```bash
 python -m venv .venv
@@ -158,7 +200,7 @@ Python, YAML, JSON, pluggable data-source adapters, and LLM integrations.
 The repository starts with a deterministic, testable core. External APIs and expensive generation steps are added as adapters rather than tightly coupling them to orchestration.
 
 
-## Cloud-first architecture
+## Future cloud architecture
 
 The agent is designed to run as a managed cloud workload rather than a local application.
 
