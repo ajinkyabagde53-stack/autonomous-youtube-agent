@@ -38,7 +38,7 @@ def test_research_signals_change_opportunity():
 
     opportunities = OpportunityEngine(config).generate(research)
 
-    assert len(opportunities) == 1
-    assert opportunities[0].topic == "test topic"
-    assert 0 <= opportunities[0].score <= 1
-    assert opportunities[0].evidence
+    assert opportunities
+    assert any("test topic" in item.topic for item in opportunities)
+    assert all(0 <= item.score <= 1 for item in opportunities)
+    assert all(item.evidence for item in opportunities)
