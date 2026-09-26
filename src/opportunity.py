@@ -42,11 +42,22 @@ class OpportunityEngine:
             return self._seed_from_config()
 
         grouped: dict[str, list[ResearchItem]] = defaultdict(list)
-        for item in items:
-            for topic in item.topics:
-                topic = topic.strip().lower()
-                if topic:
-                    grouped[topic].append(item)
+        candidates = self._candidate_topics(items, intelligence)
+        for candidate in candidates:
+            candidate_tokens = _tokenize(candidate)
+            matched = [
+                item for item in items
+                if candidate_tokens & _tokenize(item.title + " " + item.summary)
+            ]
+            grouped[candidate] = matched
+
+        grouped = {topic: matches for topic, matches in grouped.items() if matches}
+        if not grouped:
+            for item in items:
+                for topic in item.topics:
+                    topic = topic.strip().lower()
+                    if topic:
+                        grouped[topic].append(item)
 
         topic_stats: dict[str, dict[str, float]] = {}
         for topic, topic_items in grouped.items():
@@ -71,6 +82,9 @@ class OpportunityEngine:
         content_gaps = self._intelligence_terms(
             intelligence,
             "content_gaps",
+        ) + self._intelligence_terms(
+            intelligence,
+            "gap_candidates",
         )
         audience_problems = self._intelligence_terms(
             intelligence,
@@ -139,6 +153,33 @@ class OpportunityEngine:
             key=lambda item: item.score,
             reverse=True,
         )
+
+    @staticmethod
+    def _candidate_topics(
+        items: list[ResearchItem],
+        intelligence: dict | None,
+    ) -> list[str]:
+        candidates = (
+            OpportunityEngine._intelligence_terms(intelligence, "gap_candidates")
+            + OpportunityEngine._intelligence_terms(intelligence, "content_gaps")
+        )
+        if candidates:
+            return list(dict.fromkeys(c.strip().lower() for c in candidates if c.strip()))[:12]
+
+        # Deterministic fallback when no LLM is available: use meaningful
+        # multi-word title phrases as candidate topics rather than random seeds.
+        phrases = Counter()
+        for item in items:
+            tokens = [
+                token for token in re.findall(r"[a-zA-Z0-9]+", item.title.lower())
+                if len(token) > 3
+            ]
+            for size in (2, 3):
+                for index in range(len(tokens) - size + 1):
+                    phrase = " ".join(tokens[index:index + size])
+                    phrases[phrase] += 1
+
+        return [phrase for phrase, _ in phrases.most_common(12)]
 
     @staticmethod
     def _engagement(item: ResearchItem) -> float:
