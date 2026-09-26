@@ -79,6 +79,10 @@ def run_overseer(run_id, genre, research_mode="content_gap"):
         live_research = research_agent.collect_youtube(genre)
         research = research_agent.normalize(local_research + live_research)
         STATE["research_count"] = len(research)
+        STATE["research_source"] = (
+            "YouTube + local research" if live_research
+            else "local research only — add YOUTUBE_API_KEY for live research"
+        )
         STATE["completed_steps"].append("research")
 
         # Intelligence currently requires an LLM API. Keep the local run useful
@@ -95,7 +99,7 @@ def run_overseer(run_id, genre, research_mode="content_gap"):
         STATE["completed_steps"].append("intelligence")
 
         STATE["current_step"] = "opportunity"
-        opportunities = OpportunityEngine(config).generate(research, intelligence)
+        opportunities = OpportunityEngine(config).generate(research, intelligence, genre)
         STATE["opportunity_count"] = len(opportunities)
         STATE["opportunities"] = [public_opportunity(x) for x in opportunities[:20]]
         write_json("research.json", research)
