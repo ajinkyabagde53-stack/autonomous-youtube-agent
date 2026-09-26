@@ -52,7 +52,11 @@ function render(state){
   document.getElementById("sources-count").textContent=state.research_count ?? 0;
   document.getElementById("opportunity-count").textContent=state.opportunity_count ?? 0;
   document.getElementById("run-time").textContent=state.completed_at?"Completed":"Not started";
-  document.getElementById("run-title").textContent=state.status==="running"?"Overseer is working":"Ready for a run";
+  document.getElementById("run-title").textContent=state.status==="running"
+    ? `Finding gaps in ${state.genre || "your selected genre"}`
+    : state.genre
+      ? `Ready to research ${state.genre}`
+      : "Ready for a run";
   document.getElementById("run-cost").textContent="API";
   setStageState(state.completed_steps||[],state.current_step,state.status);
   renderOpportunities(state.opportunities||[]);
@@ -69,12 +73,31 @@ async function refresh(){
   }
 }
 
+function selectedGenre(){
+  const select=document.getElementById("genre-select");
+  const custom=document.getElementById("custom-genre");
+  if(select.value==="custom"){
+    return custom.value.trim();
+  }
+  return select.value;
+}
+
 async function runAgent(){
+  const genre=selectedGenre();
+  if(!genre){
+    showToast("Choose or enter a research genre first");
+    return;
+  }
+
   try{
-    const response=await fetch("/api/run",{method:"POST"});
+    const response=await fetch("/api/run",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({genre,mode:"content_gap"})
+    });
     const data=await response.json();
     if(!response.ok) throw new Error(data.message||"Could not start Overseer");
-    showToast("Overseer run started");
+    showToast(`Researching gaps in: ${genre}`);
     await refresh();
   }catch(error){
     showToast(error.message);
@@ -97,9 +120,15 @@ setInterval(refresh,2000);
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  const button = document.querySelector(".topbar .primary");
-  if (button) {
-    button.removeAttribute("onclick");
-    button.addEventListener("click", runAgent);
+  const button = document.getElementById("run-agent");
+  const select = document.getElementById("genre-select");
+  const custom = document.getElementById("custom-genre");
+
+  if(button) button.addEventListener("click", runAgent);
+  if(select) {
+    select.addEventListener("change", () => {
+      custom.hidden = select.value !== "custom";
+      if(select.value === "custom") custom.focus();
+    });
   }
 });
