@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous YouTube Agent</title>
+  <link rel="stylesheet" href="/web/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AY</div>
+        <div><strong>Autonomous</strong><span>YouTube Agent</span></div>
+      </div>
+      <nav>
+        <a class="active" href="#overview">Overview</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#opportunities">Opportunities</a>
+        <a href="#content">Content</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#memory">Memory</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="status-dot"><i></i> Cloud runtime online</div>
+        <div class="mini-user">AB <span>Ajinkya</span></div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CHANNEL CONTROL CENTER</p>
+          <h1>Good evening, Ajinkya.</h1>
+          <p class="muted">Your agent is researching, learning and preparing the next video.</p>
+        </div>
+        <button class="primary" onclick="runAgent()">Run agent <span>↗</span></button>
+      </header>
+
+      <section id="overview" class="hero-grid">
+        <div class="hero-card">
+          <div class="hero-head">
+            <div>
+              <span class="pill live">LIVE RUN</span>
+              <h2>Finding the next opportunity</h2>
+            </div>
+            <span class="timestamp">2m ago</span>
+          </div>
+          <div class="pipeline">
+            <div class="stage done"><b>✓</b><span>Research</span></div>
+            <div class="line done"></div>
+            <div class="stage done"><b>✓</b><span>Intelligence</span></div>
+            <div class="line done"></div>
+            <div class="stage active"><b>03</b><span>Opportunity</span></div>
+            <div class="line"></div>
+            <div class="stage"><b>04</b><span>Strategy</span></div>
+            <div class="line"></div>
+            <div class="stage"><b>05</b><span>Script</span></div>
+            <div class="line"></div>
+            <div class="stage"><b>06</b><span>Production</span></div>
+          </div>
+          <div class="run-detail">
+            <div><span>Sources scanned</span><strong>184</strong></div>
+            <div><span>Signals found</span><strong>31</strong></div>
+            <div><span>Opportunities</span><strong>8</strong></div>
+            <div><span>Est. run cost</span><strong>$0.84</strong></div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <p class="eyebrow">CHANNEL HEALTH</p>
+          <div class="metric-row"><strong>78</strong><span>/ 100</span></div>
+          <div class="progress"><i style="width:78%"></i></div>
+          <p class="muted small">Based on recent retention, CTR and publishing consistency.</p>
+          <div class="metric-foot"><span>↑ 12% vs last month</span><span>Learning active</span></div>
+        </div>
+      </section>
+
+      <section id="opportunities" class="section">
+        <div class="section-head">
+          <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>What the agent wants to make</h2></div>
+          <button class="ghost" onclick="showToast('Opportunity queue refreshed')">Refresh</button>
+        </div>
+        <div class="opportunity-list">
+          <article class="opportunity featured">
+            <div class="score">92</div>
+            <div class="opp-main">
+              <div class="tags"><span>HIGH DEMAND</span><span>LOWER COMPETITION</span></div>
+              <h3>Why most AI agents fail after the demo</h3>
+              <p>Strong recurring question + clear gap in practical, end-to-end explanations. The agent found 14 supporting signals across YouTube and search.</p>
+              <div class="evidence"><span>Demand 94</span><span>Audience fit 96</span><span>Gap 82</span><span>Intent 78</span></div>
+            </div>
+            <button class="icon-btn" onclick="approveIdea(this)">→</button>
+          </article>
+          <article class="opportunity">
+            <div class="score">87</div>
+            <div class="opp-main">
+              <div class="tags"><span>RISING TOPIC</span></div>
+              <h3>Build an AI content system that actually runs itself</h3>
+              <p>Adjacent demand is increasing. Differentiation opportunity: show the complete system rather than isolated tools.</p>
+              <div class="evidence"><span>Demand 89</span><span>Audience fit 91</span><span>Gap 79</span><span>Intent 74</span></div>
+            </div>
+            <button class="icon-btn" onclick="approveIdea(this)">→</button>
+          </article>
+          <article class="opportunity">
+            <div class="score">81</div>
+            <div class="opp-main">
+              <div class="tags"><span>SEARCH GAP</span></div>
+              <h3>How to turn YouTube analytics into your next 10 videos</h3>
+              <p>Search intent is clear, while competing videos are fragmented across analytics and strategy topics.</p>
+              <div class="evidence"><span>Demand 84</span><span>Audience fit 86</span><span>Gap 77</span><span>Intent 81</span></div>
+            </div>
+            <button class="icon-btn" onclick="approveIdea(this)">→</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="pipeline" class="two-col section">
+        <div class="panel">
+          <div class="section-head"><div><p class="eyebrow">CURRENT ASSET</p><h2>Video workspace</h2></div><span class="pill review">AWAITING REVIEW</span></div>
+          <div class="video-workspace">
+            <div class="thumbnail"><div class="thumb-label">AI AGENTS</div><strong>WHY THEY<br/>FAIL</strong><span>Autonomous YouTube Agent</span></div>
+            <div class="video-info">
+              <h3>Why most AI agents fail after the demo</h3>
+              <p class="muted">8:42 estimated · Faceless · Educational</p>
+              <div class="checklist">
+                <div><b>✓</b> Research brief</div>
+                <div><b>✓</b> Script & fact-check queue</div>
+                <div><b>✓</b> Visual production plan</div>
+                <div><b>•</b> Human approval</div>
+              </div>
+              <button class="primary full" onclick="approveVideo()">Review & approve</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="memory">
+          <div class="section-head"><div><p class="eyebrow">LEARNING LOOP</p><h2>What changed</h2></div></div>
+          <div class="learning-item"><span class="learning-icon">↗</span><div><strong>How-to titles</strong><p>+18% median CTR vs channel baseline</p></div></div>
+          <div class="learning-item"><span class="learning-icon">◷</span><div><strong>8–10 minute videos</strong><p>Highest observed average percentage viewed</p></div></div>
+          <div class="learning-item"><span class="learning-icon">!</span><div><strong>Generic listicles</strong><p>Lower retention — deprioritised in strategy</p></div></div>
+          <div class="memory-note">The agent uses observed channel evidence separately from its opportunity score. It learns; it does not blindly rewrite history.</div>
+        </div>
+      </section>
+
+      <section id="analytics" class="section">
+        <div class="section-head"><div><p class="eyebrow">PERFORMANCE</p><h2>Channel signals</h2></div><span class="muted">Last 28 days</span></div>
+        <div class="analytics-grid">
+          <div class="stat"><span>Views</span><strong>24.8K</strong><em>+31%</em></div>
+          <div class="stat"><span>CTR</span><strong>5.8%</strong><em>+0.7pp</em></div>
+          <div class="stat"><span>Avg. view</span><strong>4:36</strong><em>+14%</em></div>
+          <div class="stat"><span>Subscribers</span><strong>+412</strong><em>+28%</em></div>
+        </div>
+      </section>
+
+      <footer>Autonomous YouTube Agent · Cloud-first · Human approval remains required before publishing.</footer>
+    </main>
+  </div>
+  <div id="toast"></div>
+  <script src="/web/app.js"></script>
+</body>
+</html>
