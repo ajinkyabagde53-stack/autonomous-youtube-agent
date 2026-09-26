@@ -31,6 +31,8 @@ STATE = {
     "opportunity_count": 0,
     "opportunities": [],
     "channel": "Overseer",
+    "genre": None,
+    "research_mode": "content_gap",
 }
 
 
@@ -53,13 +55,15 @@ def public_opportunity(item):
     }
 
 
-def run_overseer(run_id):
+def run_overseer(run_id, genre, research_mode="content_gap"):
     STATE.update(
         run_id=run_id,
         status="running",
         started_at=now(),
         completed_at=None,
         current_step="research",
+        genre=genre,
+        research_mode=research_mode,
         completed_steps=[],
         errors=[],
         research_count=0,
@@ -71,7 +75,9 @@ def run_overseer(run_id):
 
         STATE["current_step"] = "research"
         research_agent = ResearchAgent(config, "research")
-        research = research_agent.normalize(research_agent.collect())
+        local_research = research_agent.collect(genre)
+        live_research = research_agent.collect_youtube(genre)
+        research = research_agent.normalize(local_research + live_research)
         STATE["research_count"] = len(research)
         STATE["completed_steps"].append("research")
 
@@ -83,6 +89,8 @@ def run_overseer(run_id):
         if os.getenv("ANTHROPIC_API_KEY"):
             from src.intelligence import IntelligenceAgent
             intelligence = IntelligenceAgent(config).analyze(research)
+            if isinstance(intelligence, dict):
+                intelligence["research_genre"] = genre
             write_json("intelligence.json", intelligence)
         STATE["completed_steps"].append("intelligence")
 
@@ -158,9 +166,24 @@ class Handler(BaseHTTPRequestHandler):
             if STATE["status"] == "running":
                 self.send_json({"ok": False, "message": "Overseer is already running.", "state": STATE}, 409)
                 return
+
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length) if length else b"{}"
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except json.JSONDecodeError:
+                payload = {}
+
+            genre = str(payload.get("genre", "")).strip() or "AI productivity"
+            research_mode = str(payload.get("mode", "content_gap")).strip() or "content_gap"
+
             run_id = uuid.uuid4().hex[:10]
-            threading.Thread(target=run_overseer, args=(run_id,), daemon=True).start()
-            self.send_json({"ok": True, "run_id": run_id})
+            threading.Thread(
+                target=run_overseer,
+                args=(run_id, genre, research_mode),
+                daemon=True,
+            ).start()
+            self.send_json({"ok": True, "run_id": run_id, "genre": genre, "mode": research_mode})
             return
         self.send_error(404)
 
