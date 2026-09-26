@@ -156,3 +156,20 @@ Python, YAML, JSON, pluggable data-source adapters, and LLM integrations.
 ## Roadmap
 
 The repository starts with a deterministic, testable core. External APIs and expensive generation steps are added as adapters rather than tightly coupling them to orchestration.
+
+
+## Cloud-first architecture
+
+The agent is designed to run as a managed cloud workload rather than a local application.
+
+- **GitHub:** source control and deployment source
+- **Managed database:** channel state, research, opportunities, assets and performance memory
+- **Object storage:** generated audio, images and video files
+- **Managed scheduler:** recurring research, strategy and learning jobs
+- **LLM APIs:** reasoning and generation
+- **YouTube APIs:** research, publishing and analytics
+- **User device:** dashboard, approvals and development only
+
+The repository now contains cloud-oriented orchestration, job definitions, database schema and provider-neutral storage interfaces under `app/`, `api/`, and `config/cloud.yaml`.
+
+Heavy media and model workloads should remain in managed services; the local machine does not need to store the channel's asset library.
