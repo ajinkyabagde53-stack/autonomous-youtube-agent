@@ -13,7 +13,7 @@ class IntelligenceAgent:
         self.config = config
         self.llm = llm or LLMClient()
 
-    def analyze(self, items: list[ResearchItem]) -> dict:
+    def analyze(self, items: list[ResearchItem], genre: str | None = None) -> dict:
         compact = [
             {
                 "source": item.source,
@@ -34,7 +34,7 @@ class IntelligenceAgent:
 
         prompt = f"""
 Channel niche: {self.config.niche}
-Research genre: {self.config.niche}
+Research genre: {genre or self.config.niche}
 Primary audience: {self.config.audience.get("primary", "")}
 
 Analyze the research below. Return JSON with:
