@@ -34,6 +34,7 @@ class IntelligenceAgent:
 
         prompt = f"""
 Channel niche: {self.config.niche}
+Research genre: {self.config.niche}
 Primary audience: {self.config.audience.get("primary", "")}
 
 Analyze the research below. Return JSON with:
@@ -45,8 +46,13 @@ Analyze the research below. Return JSON with:
 - title_patterns
 - content_gaps
 - evidence_notes
+- gap_candidates
 
 Each should be an array. Do not invent metrics or facts. If evidence is weak, say so.
+For gap_candidates, return up to 8 specific video-topic opportunities inside the
+research genre. Prioritize questions or use cases where audience demand signals
+exist but the sample has relatively few strong, direct videos. Do not simply
+repeat the genre name.
 
 RESEARCH:
 {json.dumps(compact, ensure_ascii=False)}
