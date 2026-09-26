@@ -36,10 +36,11 @@ class OpportunityEngine:
         self,
         research: Iterable[ResearchItem],
         intelligence: dict | None = None,
+        genre: str | None = None,
     ) -> list[Opportunity]:
         items = list(research)
         if not items:
-            return self._seed_from_config()
+            return self._seed_from_config(genre or self.config.niche)
 
         grouped: dict[str, list[ResearchItem]] = defaultdict(list)
         candidates = self._candidate_topics(items, intelligence)
@@ -230,19 +231,20 @@ class OpportunityEngine:
         matches = sum(term in lowered for term in commercial_terms)
         return min(1.0, 0.45 + matches * 0.10)
 
-    def _seed_from_config(self) -> list[Opportunity]:
+    def _seed_from_config(self, genre: str) -> list[Opportunity]:
         return [
             Opportunity(
-                topic=problem,
-                angle=f"Solve: {problem}",
+                topic=f"{genre}: {problem}",
+                angle=f"Investigate the gap around {problem.lower()} within {genre}.",
                 demand_signal=0.45,
                 audience_fit=0.75,
                 competition_gap=0.50,
                 differentiation=0.65,
                 business_intent=0.45,
                 rationale=(
-                    "Seed opportunity generated from a configured audience "
-                    "pain point. It should be replaced by live research."
+                    "Starter hypothesis generated from a configured audience pain point. "
+                    "It is not presented as a discovered gap until live research "
+                    "provides evidence."
                 ),
                 evidence=["config/channel.yaml"],
             )
