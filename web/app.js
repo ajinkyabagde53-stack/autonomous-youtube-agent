@@ -50,6 +50,8 @@ function escapeHtml(value){
 
 function render(state){
   document.getElementById("sources-count").textContent=state.research_count ?? 0;
+  const sourceLabel=document.querySelector(".run-detail div:first-child span");
+  if(sourceLabel && state.research_source) sourceLabel.title=state.research_source;
   document.getElementById("opportunity-count").textContent=state.opportunity_count ?? 0;
   document.getElementById("run-time").textContent=state.completed_at?"Completed":"Not started";
   document.getElementById("run-title").textContent=state.status==="running"
