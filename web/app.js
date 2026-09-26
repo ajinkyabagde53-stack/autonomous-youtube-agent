@@ -94,3 +94,12 @@ function approveVideo(){
 
 refresh();
 setInterval(refresh,2000);
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.querySelector(".topbar .primary");
+  if (button) {
+    button.removeAttribute("onclick");
+    button.addEventListener("click", runAgent);
+  }
+});
