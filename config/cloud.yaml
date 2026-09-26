@@ -1,0 +1,27 @@
+runtime:
+  mode: "cloud"
+  human_approval_before_publish: true
+
+storage:
+  provider: "managed_object_storage"
+  bucket: "youtube-agent-assets"
+
+database:
+  provider: "managed_postgres"
+
+scheduler:
+  provider: "managed_scheduler"
+
+agents:
+  research: true
+  intelligence: true
+  opportunity: true
+  strategy: true
+  brief: true
+  script: true
+  production: true
+  thumbnail: true
+  qa: true
+  publishing: false
+  analytics: true
+  learning: true
