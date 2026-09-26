@@ -88,7 +88,7 @@ def run_overseer(run_id, genre, research_mode="content_gap"):
         STATE["current_step"] = "intelligence"
         if os.getenv("ANTHROPIC_API_KEY"):
             from src.intelligence import IntelligenceAgent
-            intelligence = IntelligenceAgent(config).analyze(research)
+            intelligence = IntelligenceAgent(config).analyze(research, genre)
             if isinstance(intelligence, dict):
                 intelligence["research_genre"] = genre
             write_json("intelligence.json", intelligence)
