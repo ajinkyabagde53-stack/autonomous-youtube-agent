@@ -13,6 +13,7 @@ from src.config import load_channel_config
 from src.opportunity import OpportunityEngine
 from src.output import write_json, write_summary
 from src.research import ResearchAgent
+from src.models import ReferenceChannel
 from src.strategy import StrategyAgent
 
 ROOT = Path(__file__).resolve().parent
@@ -33,6 +34,8 @@ STATE = {
     "channel": "Overseer",
     "genre": None,
     "research_mode": "content_gap",
+    "reference_channels": [],
+    "channel_profiles": [],
 }
 
 
@@ -55,7 +58,7 @@ def public_opportunity(item):
     }
 
 
-def run_overseer(run_id, genre, research_mode="content_gap"):
+def run_overseer(run_id, genre, research_mode="content_gap", channel_urls=None):
     STATE.update(
         run_id=run_id,
         status="running",
@@ -69,6 +72,8 @@ def run_overseer(run_id, genre, research_mode="content_gap"):
         research_count=0,
         opportunity_count=0,
         opportunities=[],
+        reference_channels=channel_urls or [],
+        channel_profiles=[],
     )
     try:
         config = load_channel_config(str(CONFIG))
@@ -76,11 +81,37 @@ def run_overseer(run_id, genre, research_mode="content_gap"):
         STATE["current_step"] = "research"
         research_agent = ResearchAgent(config, "research")
         local_research = research_agent.collect(genre)
+        reference_profiles = []
+        reference_research = []
+
+        for channel_url in (channel_urls or []):
+            profile, videos = research_agent.collect_reference_channel(channel_url)
+            reference_profiles.append(profile)
+            reference_research.extend(videos)
+
         live_research = research_agent.collect_youtube(genre)
-        research = research_agent.normalize(local_research + live_research)
+        research = research_agent.normalize(
+            local_research + reference_research + live_research
+        )
+        STATE["channel_profiles"] = [
+            {
+                "url": p.url,
+                "channel_id": p.channel_id,
+                "title": p.title,
+                "subscriber_count": p.subscriber_count,
+                "video_count": p.video_count,
+                "view_count": p.view_count,
+            }
+            for p in reference_profiles
+        ]
         STATE["research_count"] = len(research)
         STATE["research_source"] = (
-            "YouTube + local research" if live_research
+            "Reference channels + YouTube + local research"
+            if reference_research and live_research
+            else "Reference channels + local research"
+            if reference_research
+            else "YouTube + local research"
+            if live_research
             else "local research only — add YOUTUBE_API_KEY for live research"
         )
         STATE["completed_steps"].append("research")
@@ -180,14 +211,19 @@ class Handler(BaseHTTPRequestHandler):
 
             genre = str(payload.get("genre", "")).strip() or "AI productivity"
             research_mode = str(payload.get("mode", "content_gap")).strip() or "content_gap"
+            channel_urls = payload.get("channels", [])
+            if isinstance(channel_urls, str):
+                channel_urls = [line.strip() for line in channel_urls.splitlines() if line.strip()]
+            if not isinstance(channel_urls, list):
+                channel_urls = []
 
             run_id = uuid.uuid4().hex[:10]
             threading.Thread(
                 target=run_overseer,
-                args=(run_id, genre, research_mode),
+                args=(run_id, genre, research_mode, channel_urls),
                 daemon=True,
             ).start()
-            self.send_json({"ok": True, "run_id": run_id, "genre": genre, "mode": research_mode})
+            self.send_json({"ok": True, "run_id": run_id, "genre": genre, "mode": research_mode, "channels": channel_urls})
             return
         self.send_error(404)
 
