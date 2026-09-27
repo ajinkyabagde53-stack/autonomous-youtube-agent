@@ -32,25 +32,9 @@
         <div>
           <p class="eyebrow">CHANNEL CONTROL CENTER</p>
           <h1>Good evening, Ajinkya.</h1>
-          <p class="muted">Choose a research territory. Overseer finds the strongest content gap inside it.</p>
+          <p class="muted">Choose the channels Overseer should study. It infers the research territory from the evidence.</p>
         </div>
         <div class="run-controls">
-          <label class="genre-label">
-            <span>Research genre</span>
-            <select id="genre-select">
-              <option value="AI productivity">AI Productivity</option>
-              <option value="AI tools">AI Tools</option>
-              <option value="AI agents">AI Agents</option>
-              <option value="AI automation">AI Automation</option>
-              <option value="AI for marketing">AI for Marketing</option>
-              <option value="AI for business">AI for Business</option>
-              <option value="AI for creators">AI for Creators</option>
-              <option value="AI comparisons">AI Comparisons</option>
-              <option value="AI news and trends">AI News & Trends</option>
-              <option value="custom">Custom genre…</option>
-            </select>
-          </label>
-          <input id="custom-genre" class="genre-input" type="text" placeholder="e.g. AI agents for sales" hidden />
           <button class="primary" id="run-agent">Research channels <span>↗</span></button>
         </div>
       </header>
@@ -58,19 +42,12 @@
       <section id="research-setup" class="section setup-section">
         <div class="section-head">
           <div><p class="eyebrow">RESEARCH SETUP</p><h2>Tell Overseer what to study</h2></div>
-          <span class="muted">Reference channels are the starting point</span>
+          <span class="muted">Reference channels define the research territory</span>
         </div>
-        <div class="setup-grid">
-          <div class="panel setup-panel">
-            <label class="field-label">Research genre</label>
-            <input id="genre-input" class="setup-input" value="AI agents for marketing" placeholder="e.g. AI agents for marketing" />
-            <p class="muted small">This defines the territory Overseer will analyse.</p>
-          </div>
-          <div class="panel setup-panel">
-            <label class="field-label">Reference YouTube channels</label>
-            <textarea id="channels-input" class="setup-textarea" placeholder="Paste one YouTube channel URL per line"></textarea>
-            <p class="muted small">Start with 1–10 channels. Use @handles or /channel/ URLs.</p>
-          </div>
+        <div class="panel setup-panel setup-panel-wide">
+          <label class="field-label">Reference YouTube channels</label>
+          <textarea id="channels-input" class="setup-textarea" placeholder="Paste one YouTube channel URL per line"></textarea>
+          <p class="muted small">Start with 1–10 channels. Use @handles or /channel/ URLs. Overseer will infer the shared territory instead of asking you to choose a genre.</p>
         </div>
       </section>
 
@@ -79,7 +56,7 @@
           <div class="hero-head">
             <div>
               <span class="pill live" id="run-pill">READY</span>
-              <h2 id="run-title">Ready for a run</h2>
+              <h2 id="run-title">Ready for a research run</h2>
             </div>
             <span class="timestamp" id="run-time">Not started</span>
           </div>
@@ -96,9 +73,19 @@
             <div class="line"></div>
             <div class="stage" data-stage="production"><b>06</b><span>Production</span></div>
           </div>
+
           <div id="channel-profiles" class="channel-profiles"></div>
+
+          <div id="research-territory" class="territory-card">
+            <div class="territory-empty">
+              <span class="field-label">Research territory</span>
+              <strong>Waiting for reference-channel evidence</strong>
+              <p class="muted small">After a run, Overseer will show the territory it inferred, its confidence, and the evidence used.</p>
+            </div>
+          </div>
+
           <div class="run-detail">
-            <div><span>Sources scanned</span><strong id="sources-count">0</strong></div>
+            <div><span>Videos scanned</span><strong id="sources-count">0</strong></div>
             <div><span>Signals found</span><strong id="signals-count">—</strong></div>
             <div><span>Opportunities</span><strong id="opportunity-count">0</strong></div>
             <div><span>Run cost</span><strong id="run-cost">API</strong></div>
@@ -116,40 +103,13 @@
 
       <section id="opportunities" class="section">
         <div class="section-head">
-          <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>Content gaps in your genre</h2></div>
+          <div><p class="eyebrow">OPPORTUNITY ENGINE</p><h2>Research opportunities</h2></div>
           <button class="ghost" onclick="showToast('Opportunity queue refreshed')">Refresh</button>
         </div>
         <div class="opportunity-list" id="opportunity-list">
-          <article class="opportunity featured">
-            <div class="score">92</div>
-            <div class="opp-main">
-              <div class="tags"><span>HIGH DEMAND</span><span>LOWER COMPETITION</span></div>
-              <h3>Why most AI agents fail after the demo</h3>
-              <p>Strong recurring question + clear gap in practical, end-to-end explanations. The agent found 14 supporting signals across YouTube and search.</p>
-              <div class="evidence"><span>Demand 94</span><span>Audience fit 96</span><span>Gap 82</span><span>Intent 78</span></div>
-            </div>
-            <button class="icon-btn" onclick="approveIdea(this)">→</button>
-          </article>
-          <article class="opportunity">
-            <div class="score">87</div>
-            <div class="opp-main">
-              <div class="tags"><span>RISING TOPIC</span></div>
-              <h3>Build an AI content system that actually runs itself</h3>
-              <p>Adjacent demand is increasing. Differentiation opportunity: show the complete system rather than isolated tools.</p>
-              <div class="evidence"><span>Demand 89</span><span>Audience fit 91</span><span>Gap 79</span><span>Intent 74</span></div>
-            </div>
-            <button class="icon-btn" onclick="approveIdea(this)">→</button>
-          </article>
-          <article class="opportunity">
-            <div class="score">81</div>
-            <div class="opp-main">
-              <div class="tags"><span>SEARCH GAP</span></div>
-              <h3>How to turn YouTube analytics into your next 10 videos</h3>
-              <p>Search intent is clear, while competing videos are fragmented across analytics and strategy topics.</p>
-              <div class="evidence"><span>Demand 84</span><span>Audience fit 86</span><span>Gap 77</span><span>Intent 81</span></div>
-            </div>
-            <button class="icon-btn" onclick="approveIdea(this)">→</button>
-          </article>
+          <div class="panel" style="padding:20px">
+            <p class="muted">Run Overseer with reference channels to generate evidence-based opportunities.</p>
+          </div>
         </div>
       </section>
 
@@ -157,10 +117,10 @@
         <div class="panel">
           <div class="section-head"><div><p class="eyebrow">CURRENT ASSET</p><h2>Video workspace</h2></div><span class="pill review">AWAITING REVIEW</span></div>
           <div class="video-workspace">
-            <div class="thumbnail"><div class="thumb-label">AI AGENTS</div><strong>WHY THEY<br/>FAIL</strong><span>Autonomous YouTube Agent</span></div>
+            <div class="thumbnail"><div class="thumb-label">OVERSEER</div><strong>RESEARCH<br/>→ ACTION</strong><span>Autonomous YouTube Agent</span></div>
             <div class="video-info">
-              <h3>Why most AI agents fail after the demo</h3>
-              <p class="muted">8:42 estimated · Faceless · Educational</p>
+              <h3>Selected content opportunity</h3>
+              <p class="muted">Faceless · Educational</p>
               <div class="checklist">
                 <div><b>✓</b> Research brief</div>
                 <div><b>✓</b> Script & fact-check queue</div>
@@ -174,20 +134,20 @@
 
         <div class="panel" id="memory">
           <div class="section-head"><div><p class="eyebrow">LEARNING LOOP</p><h2>What changed</h2></div></div>
-          <div class="learning-item"><span class="learning-icon">↗</span><div><strong>How-to titles</strong><p>+18% median CTR vs channel baseline</p></div></div>
-          <div class="learning-item"><span class="learning-icon">◷</span><div><strong>8–10 minute videos</strong><p>Highest observed average percentage viewed</p></div></div>
-          <div class="learning-item"><span class="learning-icon">!</span><div><strong>Generic listicles</strong><p>Lower retention — deprioritised in strategy</p></div></div>
-          <div class="memory-note">The agent uses observed channel evidence separately from its opportunity score. It learns; it does not blindly rewrite history.</div>
+          <div class="learning-item"><span class="learning-icon">↗</span><div><strong>Reference-channel evidence</strong><p>Used to understand winning topics, formats and audience signals.</p></div></div>
+          <div class="learning-item"><span class="learning-icon">◷</span><div><strong>Channel baselines</strong><p>Breakouts should be evaluated relative to each channel's own normal performance.</p></div></div>
+          <div class="learning-item"><span class="learning-icon">!</span><div><strong>Human review</strong><p>Evidence and opportunity signals stay separate from publishing decisions.</p></div></div>
+          <div class="memory-note">Overseer learns from observed evidence; it does not assume every high-view topic is commercially valuable or every gap will perform.</div>
         </div>
       </section>
 
       <section id="analytics" class="section">
         <div class="section-head"><div><p class="eyebrow">PERFORMANCE</p><h2>Channel signals</h2></div><span class="muted">Last 28 days</span></div>
         <div class="analytics-grid">
-          <div class="stat"><span>Views</span><strong>24.8K</strong><em>+31%</em></div>
-          <div class="stat"><span>CTR</span><strong>5.8%</strong><em>+0.7pp</em></div>
-          <div class="stat"><span>Avg. view</span><strong>4:36</strong><em>+14%</em></div>
-          <div class="stat"><span>Subscribers</span><strong>+412</strong><em>+28%</em></div>
+          <div class="stat"><span>Views</span><strong>—</strong><em>Awaiting data</em></div>
+          <div class="stat"><span>CTR</span><strong>—</strong><em>Awaiting data</em></div>
+          <div class="stat"><span>Avg. view</span><strong>—</strong><em>Awaiting data</em></div>
+          <div class="stat"><span>Subscribers</span><strong>—</strong><em>Awaiting data</em></div>
         </div>
       </section>
 
@@ -195,6 +155,6 @@
     </main>
   </div>
   <div id="toast"></div>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
