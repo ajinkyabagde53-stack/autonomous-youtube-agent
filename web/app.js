@@ -20,17 +20,19 @@ function setStageState(completed,current,status){
     }
     if(name===current) el.classList.add("active");
   });
+
   const pill=document.getElementById("run-pill");
-  pill.textContent=status==="running"?"RUNNING":status==="failed"?"FAILED":"READY";
+  pill.textContent=status==="running"?"RUNNING":status==="failed"?"FAILED":status==="completed"?"COMPLETE":"READY";
   pill.className="pill "+(status==="running"?"live":status==="failed"?"review":"live");
 }
 
 function renderOpportunities(items){
   const list=document.getElementById("opportunity-list");
   if(!items || !items.length){
-    list.innerHTML='<div class="panel" style="padding:20px"><p class="muted">No opportunities yet. Run Overseer to generate the first queue.</p></div>';
+    list.innerHTML='<div class="panel" style="padding:20px"><p class="muted">No opportunities yet. Run Overseer to generate the first evidence-based queue.</p></div>';
     return;
   }
+
   list.innerHTML=items.slice(0,8).map((item,index)=>`
     <article class="opportunity ${index===0?"featured":""}">
       <div class="score">${item.score}</div>
@@ -48,22 +50,84 @@ function escapeHtml(value){
   return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
 }
 
+function renderChannelProfiles(profiles){
+  const box=document.getElementById("channel-profiles");
+  if(!box) return;
+
+  if(!profiles || !profiles.length){
+    box.innerHTML="";
+    return;
+  }
+
+  box.innerHTML=profiles.map(p=>`
+    <div class="channel-profile">
+      <strong>${escapeHtml(p.title || "Untitled channel")}</strong>
+      <span>${Number(p.subscriber_count||0).toLocaleString()} subscribers · ${Number(p.video_count||0).toLocaleString()} videos</span>
+    </div>`).join("");
+}
+
+function renderResearchTerritory(territory){
+  const box=document.getElementById("research-territory");
+  if(!box) return;
+
+  if(!territory){
+    box.innerHTML=`
+      <div class="territory-empty">
+        <span class="field-label">Research territory</span>
+        <strong>Waiting for reference-channel evidence</strong>
+        <p class="muted small">After a run, Overseer will show the territory it inferred, its confidence, and the evidence used.</p>
+      </div>`;
+    return;
+  }
+
+  const subTerritories=(territory.sub_territories||[]).map(item=>
+    `<span class="territory-tag">${escapeHtml(item)}</span>`
+  ).join("");
+
+  const evidence=(territory.evidence||[]).map(item=>
+    `<li>${escapeHtml(item)}</li>`
+  ).join("");
+
+  box.innerHTML=`
+    <div class="territory-head">
+      <div>
+        <span class="field-label">Research territory</span>
+        <h3>${escapeHtml(territory.label || "Reference-channel territory")}</h3>
+      </div>
+      <span class="confidence ${escapeHtml(territory.confidence||"unrated")}">${escapeHtml(String(territory.confidence||"unrated").toUpperCase())} CONFIDENCE</span>
+    </div>
+    ${subTerritories ? `<div class="territory-tags">${subTerritories}</div>` : ""}
+    ${territory.audience ? `<p class="territory-audience"><strong>Observed audience:</strong> ${escapeHtml(territory.audience)}</p>` : ""}
+    ${evidence ? `<div class="territory-evidence"><span class="field-label">Evidence used</span><ul>${evidence}</ul></div>` : ""}
+  `;
+}
+
 function render(state){
   document.getElementById("sources-count").textContent=state.research_count ?? 0;
-  const sourceLabel=document.querySelector(".run-detail div:first-child span");
-  if(sourceLabel && state.research_source) sourceLabel.title=state.research_source;
   document.getElementById("opportunity-count").textContent=state.opportunity_count ?? 0;
-  renderChannelProfiles(state.channel_profiles||[]);
-  document.getElementById("run-time").textContent=state.completed_at?"Completed":"Not started";
-  document.getElementById("run-title").textContent=state.status==="running"
-    ? `Finding gaps in ${state.genre || "your selected genre"}`
-    : state.genre
-      ? `Ready to research ${state.genre}`
-      : "Ready for a run";
+  document.getElementById("signals-count").textContent=state.research_count ? "Active" : "—";
   document.getElementById("run-cost").textContent="API";
+  document.getElementById("run-time").textContent=state.completed_at
+    ? new Date(state.completed_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})
+    : "Not started";
+
+  renderChannelProfiles(state.channel_profiles||[]);
+  renderResearchTerritory(state.research_territory);
   setStageState(state.completed_steps||[],state.current_step,state.status);
   renderOpportunities(state.opportunities||[]);
-  if(state.errors?.length) showToast(state.errors[0]);
+
+  const territory=state.research_territory?.label;
+  document.getElementById("run-title").textContent=state.status==="running"
+    ? "Studying reference channels and inferring territory"
+    : state.status==="failed"
+      ? "Research run needs attention"
+      : territory
+        ? `Research territory: ${territory}`
+        : "Ready for a research run";
+
+  if(state.status==="failed" && state.errors?.length) {
+    showToast(state.errors[state.errors.length-1]);
+  }
 }
 
 async function refresh(){
@@ -76,39 +140,15 @@ async function refresh(){
   }
 }
 
-function selectedGenre(){
-  const input=document.getElementById("genre-input");
-  return input ? input.value.trim() : "AI agents for marketing";
-}
-
 function selectedChannels(){
   const input=document.getElementById("channels-input");
   if(!input) return [];
-  return input.value.split(/\\r?\\n/).map(v=>v.trim()).filter(Boolean);
-}
-
-function renderChannelProfiles(profiles){
-  const box=document.getElementById("channel-profiles");
-  if(!box) return;
-  if(!profiles || !profiles.length){
-    box.innerHTML="";
-    return;
-  }
-  box.innerHTML=profiles.map(p=>`
-    <div class="channel-profile">
-      <strong>${escapeHtml(p.title)}</strong>
-      <span>${Number(p.subscriber_count||0).toLocaleString()} subscribers · ${Number(p.video_count||0).toLocaleString()} videos</span>
-    </div>`).join("");
+  return input.value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
 }
 
 async function runAgent(){
-  const genre=selectedGenre();
-  if(!genre){
-    showToast("Choose or enter a research genre first");
-    return;
-  }
-
   const channels=selectedChannels();
+
   if(!channels.length){
     showToast("Add at least one reference YouTube channel");
     return;
@@ -118,11 +158,16 @@ async function runAgent(){
     const response=await fetch("/api/run",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({genre,mode:"channel_intelligence",channels})
+      body:JSON.stringify({
+        mode:"channel_intelligence",
+        channels
+      })
     });
+
     const data=await response.json();
     if(!response.ok) throw new Error(data.message||"Could not start Overseer");
-    showToast(`Researching gaps in: ${genre}`);
+
+    showToast("Studying reference channels…");
     await refresh();
   }catch(error){
     showToast(error.message);
@@ -140,20 +185,9 @@ function approveVideo(){
   showToast("Human approval recorded — publishing remains gated");
 }
 
-refresh();
-setInterval(refresh,2000);
-
-
 document.addEventListener("DOMContentLoaded", () => {
   const button = document.getElementById("run-agent");
-  const select = document.getElementById("genre-select");
-  const custom = document.getElementById("custom-genre");
-
   if(button) button.addEventListener("click", runAgent);
-  if(select) {
-    select.addEventListener("change", () => {
-      custom.hidden = select.value !== "custom";
-      if(select.value === "custom") custom.focus();
-    });
-  }
+  refresh();
+  setInterval(refresh,2000);
 });
