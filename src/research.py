@@ -7,7 +7,7 @@ import urllib.request
 from pathlib import Path
 from typing import Iterable
 
-from .models import ChannelConfig, ResearchItem
+from .models import ChannelConfig, ReferenceChannel, ResearchItem
 
 
 class ResearchAgent:
@@ -58,6 +58,176 @@ class ResearchAgent:
             )
 
         return items
+
+    def collect_reference_channel(
+        self,
+        channel_url: str,
+        max_videos: int = 50,
+        region_code: str = "US",
+    ) -> tuple[ReferenceChannel, list[ResearchItem]]:
+        """Resolve a channel URL and collect its recent public videos."""
+        api_key = os.getenv("YOUTUBE_API_KEY")
+        if not api_key:
+            raise RuntimeError("YOUTUBE_API_KEY is required for reference channel research.")
+
+        channel_id = self._resolve_channel_id(channel_url)
+        params = urllib.parse.urlencode({
+            "part": "snippet,statistics,contentDetails",
+            "id": channel_id,
+            "key": api_key,
+        })
+        payload = self._get_json(f"https://www.googleapis.com/youtube/v3/channels?{params}")
+        channels = payload.get("items", [])
+        if not channels:
+            raise ValueError(f"Could not resolve YouTube channel: {channel_url}")
+
+        channel = channels[0]
+        snippet = channel.get("snippet", {})
+        stats = channel.get("statistics", {})
+        details = channel.get("contentDetails", {})
+        uploads_id = details.get("relatedPlaylists", {}).get("uploads", "")
+
+        profile = ReferenceChannel(
+            url=channel_url,
+            channel_id=channel_id,
+            title=snippet.get("title", ""),
+            description=snippet.get("description", "")[:1500],
+            subscriber_count=int(stats.get("subscriberCount", 0) or 0),
+            video_count=int(stats.get("videoCount", 0) or 0),
+            view_count=int(stats.get("viewCount", 0) or 0),
+            country=snippet.get("country", ""),
+            published_at=snippet.get("publishedAt", ""),
+            uploads_playlist_id=uploads_id,
+        )
+
+        videos = self._collect_channel_videos(
+            uploads_id,
+            channel_id,
+            max_videos=max_videos,
+        )
+        return profile, videos
+
+    def _collect_channel_videos(
+        self,
+        uploads_playlist_id: str,
+        channel_id: str,
+        max_videos: int = 50,
+    ) -> list[ResearchItem]:
+        if not uploads_playlist_id:
+            return []
+
+        api_key = os.getenv("YOUTUBE_API_KEY")
+        items: list[dict] = []
+        page_token = ""
+
+        while len(items) < max_videos:
+            params = {
+                "part": "snippet,contentDetails",
+                "playlistId": uploads_playlist_id,
+                "maxResults": min(50, max_videos - len(items)),
+                "key": api_key,
+            }
+            if page_token:
+                params["pageToken"] = page_token
+
+            payload = self._get_json(
+                "https://www.googleapis.com/youtube/v3/playlistItems?"
+                + urllib.parse.urlencode(params)
+            )
+            items.extend(payload.get("items", []))
+            page_token = payload.get("nextPageToken", "")
+            if not page_token:
+                break
+
+        video_ids = [
+            item.get("contentDetails", {}).get("videoId")
+            for item in items
+            if item.get("contentDetails", {}).get("videoId")
+        ][:max_videos]
+
+        if not video_ids:
+            return []
+
+        stats_payload = self._get_json(
+            "https://www.googleapis.com/youtube/v3/videos?"
+            + urllib.parse.urlencode({
+                "part": "snippet,statistics,contentDetails",
+                "id": ",".join(video_ids),
+                "key": api_key,
+            })
+        )
+        stats_by_id = {item.get("id"): item for item in stats_payload.get("items", [])}
+
+        results: list[ResearchItem] = []
+        for item in items[:max_videos]:
+            video_id = item.get("contentDetails", {}).get("videoId")
+            if not video_id:
+                continue
+            video = stats_by_id.get(video_id, {})
+            snippet = video.get("snippet", item.get("snippet", {}))
+            stats = video.get("statistics", {})
+            published_at = snippet.get("publishedAt", "")
+            results.append(
+                ResearchItem(
+                    source=f"youtube:{channel_id}",
+                    title=snippet.get("title", "Untitled video"),
+                    url=f"https://www.youtube.com/watch?v={video_id}",
+                    summary=snippet.get("description", "")[:1200],
+                    topics=[],
+                    metadata={
+                        "channel_id": channel_id,
+                        "video_id": video_id,
+                        "published_at": published_at,
+                        "view_count": int(stats.get("viewCount", 0) or 0),
+                        "like_count": int(stats.get("likeCount", 0) or 0),
+                        "comment_count": int(stats.get("commentCount", 0) or 0),
+                        "duration": video.get("contentDetails", {}).get("duration", ""),
+                    },
+                )
+            )
+
+        return results
+
+    def _resolve_channel_id(self, channel_url: str) -> str:
+        parsed = urllib.parse.urlparse(channel_url.strip())
+        host = parsed.netloc.lower()
+        path = parsed.path.strip("/")
+
+        if "youtube.com" not in host:
+            raise ValueError("Please provide a YouTube channel URL.")
+
+        if path.startswith("channel/"):
+            return path.split("/", 1)[1]
+
+        if path.startswith("@"):
+            handle = path.split("/", 1)[0]
+            params = urllib.parse.urlencode({
+                "part": "id",
+                "forHandle": handle,
+                "key": os.getenv("YOUTUBE_API_KEY"),
+            })
+            payload = self._get_json(
+                "https://www.googleapis.com/youtube/v3/channels?" + params
+            )
+            if payload.get("items"):
+                return payload["items"][0]["id"]
+
+        if path.startswith("user/"):
+            username = path.split("/", 1)[1]
+            params = urllib.parse.urlencode({
+                "part": "id",
+                "forUsername": username,
+                "key": os.getenv("YOUTUBE_API_KEY"),
+            })
+            payload = self._get_json(
+                "https://www.googleapis.com/youtube/v3/channels?" + params
+            )
+            if payload.get("items"):
+                return payload["items"][0]["id"]
+
+        raise ValueError(
+            "Could not resolve the channel URL. Use a YouTube @handle or /channel/ URL."
+        )
 
     def collect_youtube(
         self,
