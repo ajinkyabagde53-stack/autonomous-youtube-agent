@@ -1,70 +1,108 @@
 # Autonomous YouTube Agent
 
-An AI-powered content operating system for building and scaling a YouTube channel from research to performance feedback.
+An AI-powered content operating system for researching, planning, producing and eventually learning from a faceless YouTube channel.
 
 ## What it does
 
-This system moves beyond “generate a script” workflows. It is designed as a modular pipeline:
+Overseer is designed around a simple principle: **the user chooses what to study by selecting reference YouTube channels; Overseer infers the research territory from the evidence.**
 
-1. Configure a channel
-2. Research the audience and content landscape
-3. Extract topics, pain points, hooks and patterns
-4. Score content opportunities
-5. Build content pillars and a publishing backlog
-6. Generate video briefs and production assets
-7. Publish with human approval
-8. Capture channel performance
-9. Feed performance back into future content decisions
+The system is intentionally niche-agnostic. The same workflow can research architecture, finance, philosophy, history, science, business, gaming, or any other YouTube territory without changing the dashboard.
 
-## Architecture
+## Research architecture
 
 ```text
-Channel Config
-     |
-     v
-Research Agents
-     |
-     +--> Audience Intelligence
-     +--> Content Landscape
-     +--> Competitor Signals
-     |
-     v
+Reference YouTube Channels
+        ↓
+Channel Intelligence
+  • Channel positioning
+  • Descriptions
+  • Recent videos
+  • Views / engagement
+  • Publishing patterns
+        ↓
+Territory Inference
+  • Primary territory
+  • Sub-territories
+  • Observed audience
+  • Confidence
+  • Evidence
+        ↓
+Wider YouTube Validation
+        ↓
+Content Landscape
+  • What's winning?
+  • Breakout signals
+  • Common formats
+  • Saturated areas
+  • Emerging topics
+  • Missing topics
+        ↓
+Gap + Winner Analysis
+        ↓
+Commercial Intelligence
+        ↓
 Opportunity Engine
-     |
-     v
-Strategy Agent
-     |
-     +--> Content Pillars
-     +--> Series
-     +--> Backlog
-     |
-     v
-Production Agents
-     |
-     +--> Video Brief
-     +--> Script
-     +--> Visual Plan
-     +--> Thumbnail Brief
-     |
-     v
-Publishing / YouTube
-     |
-     v
-Analytics Agent
-     |
-     +----------------------+
-     |                      |
-     +---- Learning Loop ---+
+        ↓
+Top Opportunities
+        ↓
+User Selects
+        ↓
+Content Production
 ```
+
+The user's own channel configuration is **not** used to decide what territory a reference-channel run should study.
 
 ## Design principles
 
-- **Niche-agnostic:** channel configuration is separated from agent logic.
-- **Evidence-first:** research becomes structured data before strategy is generated.
-- **Modular:** each agent can be replaced or upgraded independently.
-- **Explainable:** opportunity scores expose the signals behind an idea.
+- **Niche-agnostic:** research is driven by the selected reference channels, not a fixed genre list.
+- **Evidence-first:** raw channel and video data is collected before strategy is generated.
+- **Explainable:** territory inference exposes confidence and supporting evidence.
+- **Universal:** architecture, finance, philosophy, history and other territories use the same pipeline.
+- **Relative:** opportunity scores compare signals inside the collected research set; they are not predictions.
+- **Commercially aware:** audience demand and commercial intent are treated as separate signals.
 - **Human-controlled:** publishing remains approval-gated until explicitly automated.
-- **Feedback-driven:** channel performance becomes input to future decisions.
+- **Feedback-driven:** future versions will feed the user's own CTR, retention, views, RPM and conversion data back into the system.
+
+## Overseer local control center
+
+Overseer runs **local-first** on Windows.
+
+### Research setup
+
+Paste one YouTube channel URL per line:
+
+```text
+https://youtube.com/@channel1
+https://youtube.com/@channel2
+https://youtube.com/@channel3
+```
+
+Overseer then:
+
+1. Collects public channel metadata.
+2. Collects recent public videos and performance signals.
+3. Infers the shared research territory.
+4. Validates that territory against wider YouTube.
+5. Extracts winning patterns, gaps and audience signals.
+6. Generates explainable opportunity candidates.
+
+### Live research keys
+
+Copy `.env.example` to `.env` and add:
+
+- `YOUTUBE_API_KEY` for public YouTube research.
+- `ANTHROPIC_API_KEY` for territory inference and semantic intelligence.
+
+Never commit `.env`.
+
+### Windows dashboard
+
+```powershell
+git pull
+.\scripts\start_dashboard.ps1
+```
+
+Then open `http://localhost:3000`.
 
 ## Repository structure
 
@@ -91,11 +129,15 @@ main.py          Pipeline entry point
 
 ### Phase 2 — Intelligence
 - [x] Live YouTube research adapter
-- [x] Transcript ingestion adapter
+- [x] Reference-channel research
+- [x] Channel/video topic metadata
+- [x] Territory inference foundation
 - [x] Audience intelligence foundation
-- [ ] Reddit/search adapters
-- [ ] Competitor analysis
 - [x] Hook and title pattern extraction foundation
+- [ ] Reddit/search adapters
+- [ ] Deeper competitor analysis
+- [ ] Automated breakout detection
+- [ ] Commercial intelligence enrichment
 
 ### Phase 3 — Production
 - [x] Video brief generator
@@ -113,105 +155,38 @@ main.py          Pipeline entry point
 
 ### Phase 5 — Learning
 - [x] Analytics data model and feedback-loop foundation
-- [ ] CTR and retention analysis
 - [x] Topic performance memory
-- [x] Analytics learning-loop command
+- [ ] CTR and retention analysis
+- [ ] RPM / revenue learning
+- [ ] Affiliate conversion learning
 - [ ] Automated strategy updates
-
-## Overseer local control center
-
-Overseer is now designed to run **local-first** on your Windows PC. The dashboard
-lets you choose a research genre before every run. The opportunity engine then
-scores content gaps inside that genre rather than selecting an unrelated topic
-from the whole channel.
-
-Example flow:
-
-```text
-Choose genre
-   ↓
-YouTube research
-   ↓
-Audience/content intelligence
-   ↓
-Gap candidates
-   ↓
-Opportunity scoring
-   ↓
-Top opportunities for human review
-```
-
-### Live research keys
-
-Copy `.env.example` to `.env` and add:
-- `YOUTUBE_API_KEY` for public YouTube research.
-- `ANTHROPIC_API_KEY` for semantic gap analysis and candidate generation.
-
-The YouTube adapter uses public search/video endpoints and a small, quota-conscious
-sample. Google's current documentation lists `search.list` at 1 quota unit per
-call and `videos.list` at 1 unit per call.
-
-### Windows dashboard
-
-```powershell
-git pull
-.scriptsstart_dashboard.ps1
-```
-
-Then open `http://localhost:3000`.
-
-
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-python main.py
-```
-
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-python main.py
-```
-
-Configure `config/channel.yaml` before running the pipeline.
 
 ## Output contract
 
 A run produces:
 
 - `outputs/research.json`
+- `outputs/research_territory.json`
 - `outputs/opportunities.json`
 - `outputs/strategy.json`
 - `outputs/run_summary.md`
 
 ## Tech stack
 
-Python, YAML, JSON, pluggable data-source adapters, and LLM integrations.
+Python, YAML, JSON, YouTube Data API, pluggable research adapters, and LLM integrations.
 
-## Roadmap
+## Future learning loop
 
-The repository starts with a deterministic, testable core. External APIs and expensive generation steps are added as adapters rather than tightly coupling them to orchestration.
+```text
+Your Videos
+   ↓
+Views / CTR / Retention / Subscribers
+   ↓
+RPM / Revenue / Affiliate Clicks
+   ↓
+Overseer Memory
+   ↓
+Future Opportunity Analysis
+```
 
-
-## Future cloud architecture
-
-The agent is designed to run as a managed cloud workload rather than a local application.
-
-- **GitHub:** source control and deployment source
-- **Managed database:** channel state, research, opportunities, assets and performance memory
-- **Object storage:** generated audio, images and video files
-- **Managed scheduler:** recurring research, strategy and learning jobs
-- **LLM APIs:** reasoning and generation
-- **YouTube APIs:** research, publishing and analytics
-- **User device:** dashboard, approvals and development only
-
-The repository now contains cloud-oriented orchestration, job definitions, database schema and provider-neutral storage interfaces under `app/`, `api/`, and `config/cloud.yaml`.
-
-Heavy media and model workloads should remain in managed services; the local machine does not need to store the channel's asset library.
+The long-term goal is for Overseer to become a research and decision-support system that gets better from the user's own channel evidence without pretending that every high-view topic is automatically a good business opportunity.
