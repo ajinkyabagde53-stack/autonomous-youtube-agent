@@ -53,6 +53,7 @@ function render(state){
   const sourceLabel=document.querySelector(".run-detail div:first-child span");
   if(sourceLabel && state.research_source) sourceLabel.title=state.research_source;
   document.getElementById("opportunity-count").textContent=state.opportunity_count ?? 0;
+  renderChannelProfiles(state.channel_profiles||[]);
   document.getElementById("run-time").textContent=state.completed_at?"Completed":"Not started";
   document.getElementById("run-title").textContent=state.status==="running"
     ? `Finding gaps in ${state.genre || "your selected genre"}`
@@ -76,12 +77,28 @@ async function refresh(){
 }
 
 function selectedGenre(){
-  const select=document.getElementById("genre-select");
-  const custom=document.getElementById("custom-genre");
-  if(select.value==="custom"){
-    return custom.value.trim();
+  const input=document.getElementById("genre-input");
+  return input ? input.value.trim() : "AI agents for marketing";
+}
+
+function selectedChannels(){
+  const input=document.getElementById("channels-input");
+  if(!input) return [];
+  return input.value.split(/\\r?\\n/).map(v=>v.trim()).filter(Boolean);
+}
+
+function renderChannelProfiles(profiles){
+  const box=document.getElementById("channel-profiles");
+  if(!box) return;
+  if(!profiles || !profiles.length){
+    box.innerHTML="";
+    return;
   }
-  return select.value;
+  box.innerHTML=profiles.map(p=>`
+    <div class="channel-profile">
+      <strong>${escapeHtml(p.title)}</strong>
+      <span>${Number(p.subscriber_count||0).toLocaleString()} subscribers · ${Number(p.video_count||0).toLocaleString()} videos</span>
+    </div>`).join("");
 }
 
 async function runAgent(){
@@ -91,11 +108,17 @@ async function runAgent(){
     return;
   }
 
+  const channels=selectedChannels();
+  if(!channels.length){
+    showToast("Add at least one reference YouTube channel");
+    return;
+  }
+
   try{
     const response=await fetch("/api/run",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({genre,mode:"content_gap"})
+      body:JSON.stringify({genre,mode:"channel_intelligence",channels})
     });
     const data=await response.json();
     if(!response.ok) throw new Error(data.message||"Could not start Overseer");
