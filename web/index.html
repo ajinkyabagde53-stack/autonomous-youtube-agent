@@ -51,9 +51,28 @@
             </select>
           </label>
           <input id="custom-genre" class="genre-input" type="text" placeholder="e.g. AI agents for sales" hidden />
-          <button class="primary" id="run-agent">Find content gap <span>↗</span></button>
+          <button class="primary" id="run-agent">Research channels <span>↗</span></button>
         </div>
       </header>
+
+      <section id="research-setup" class="section setup-section">
+        <div class="section-head">
+          <div><p class="eyebrow">RESEARCH SETUP</p><h2>Tell Overseer what to study</h2></div>
+          <span class="muted">Reference channels are the starting point</span>
+        </div>
+        <div class="setup-grid">
+          <div class="panel setup-panel">
+            <label class="field-label">Research genre</label>
+            <input id="genre-input" class="setup-input" value="AI agents for marketing" placeholder="e.g. AI agents for marketing" />
+            <p class="muted small">This defines the territory Overseer will analyse.</p>
+          </div>
+          <div class="panel setup-panel">
+            <label class="field-label">Reference YouTube channels</label>
+            <textarea id="channels-input" class="setup-textarea" placeholder="Paste one YouTube channel URL per line"></textarea>
+            <p class="muted small">Start with 1–10 channels. Use @handles or /channel/ URLs.</p>
+          </div>
+        </div>
+      </section>
 
       <section id="overview" class="hero-grid">
         <div class="hero-card">
@@ -77,6 +96,7 @@
             <div class="line"></div>
             <div class="stage" data-stage="production"><b>06</b><span>Production</span></div>
           </div>
+          <div id="channel-profiles" class="channel-profiles"></div>
           <div class="run-detail">
             <div><span>Sources scanned</span><strong id="sources-count">0</strong></div>
             <div><span>Signals found</span><strong id="signals-count">—</strong></div>
