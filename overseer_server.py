@@ -13,7 +13,6 @@ from src.config import load_channel_config
 from src.opportunity import OpportunityEngine
 from src.output import write_json, write_summary
 from src.research import ResearchAgent
-from src.models import ReferenceChannel
 from src.strategy import StrategyAgent
 
 ROOT = Path(__file__).resolve().parent
@@ -32,10 +31,11 @@ STATE = {
     "opportunity_count": 0,
     "opportunities": [],
     "channel": "Overseer",
-    "genre": None,
-    "research_mode": "content_gap",
+    "research_mode": "channel_intelligence",
     "reference_channels": [],
     "channel_profiles": [],
+    "research_territory": None,
+    "research_source": "",
 }
 
 
@@ -58,14 +58,40 @@ def public_opportunity(item):
     }
 
 
-def run_overseer(run_id, genre, research_mode="content_gap", channel_urls=None):
+def _fallback_territory(reference_profiles, reference_research):
+    """Return an honest non-LLM territory state rather than inventing one."""
+    titles = [profile.title for profile in reference_profiles if profile.title]
+    evidence = []
+    if titles:
+        evidence.append("Reference channels collected: " + ", ".join(titles[:5]) + ".")
+    if reference_research:
+        evidence.append(
+            f"{len(reference_research)} public videos were collected from the "
+            "reference channels."
+        )
+    if not evidence:
+        evidence.append("No usable reference-channel evidence was collected.")
+
+    return {
+        "label": "Reference-channel territory",
+        "sub_territories": [],
+        "audience": "",
+        "confidence": "unrated",
+        "evidence": evidence,
+    }
+
+
+def run_overseer(
+    run_id,
+    research_mode="channel_intelligence",
+    channel_urls=None,
+):
     STATE.update(
         run_id=run_id,
         status="running",
         started_at=now(),
         completed_at=None,
         current_step="research",
-        genre=genre,
         research_mode=research_mode,
         completed_steps=[],
         errors=[],
@@ -74,65 +100,111 @@ def run_overseer(run_id, genre, research_mode="content_gap", channel_urls=None):
         opportunities=[],
         reference_channels=channel_urls or [],
         channel_profiles=[],
+        research_territory=None,
+        research_source="",
     )
+
     try:
         config = load_channel_config(str(CONFIG))
-
-        STATE["current_step"] = "research"
         research_agent = ResearchAgent(config, "research")
-        local_research = research_agent.collect(genre)
+
+        # Reference channels are the research brief. The user's own configured
+        # channel niche is deliberately not used to select or constrain the
+        # research territory.
         reference_profiles = []
         reference_research = []
 
         for channel_url in (channel_urls or []):
-            profile, videos = research_agent.collect_reference_channel(channel_url)
-            reference_profiles.append(profile)
-            reference_research.extend(videos)
+            try:
+                profile, videos = research_agent.collect_reference_channel(channel_url)
+                reference_profiles.append(profile)
+                reference_research.extend(videos)
+            except Exception as exc:
+                STATE["errors"].append(
+                    f"Reference channel failed ({channel_url}): "
+                    f"{type(exc).__name__}: {exc}"
+                )
 
-        live_research = research_agent.collect_youtube(genre)
-        research = research_agent.normalize(
-            local_research + reference_research + live_research
-        )
         STATE["channel_profiles"] = [
             {
-                "url": p.url,
-                "channel_id": p.channel_id,
-                "title": p.title,
-                "subscriber_count": p.subscriber_count,
-                "video_count": p.video_count,
-                "view_count": p.view_count,
+                "url": profile.url,
+                "channel_id": profile.channel_id,
+                "title": profile.title,
+                "description": profile.description,
+                "subscriber_count": profile.subscriber_count,
+                "video_count": profile.video_count,
+                "view_count": profile.view_count,
+                "country": profile.country,
+                "topic_categories": profile.topic_categories,
             }
-            for p in reference_profiles
+            for profile in reference_profiles
         ]
+
+        # Infer territory only after channel evidence exists.
+        STATE["current_step"] = "intelligence"
+        territory = _fallback_territory(reference_profiles, reference_research)
+
+        if reference_profiles and os.getenv("ANTHROPIC_API_KEY"):
+            from src.intelligence import IntelligenceAgent
+
+            intelligence_agent = IntelligenceAgent(config)
+            territory = intelligence_agent.infer_territory(
+                STATE["channel_profiles"],
+                reference_research,
+            )
+
+        STATE["research_territory"] = territory
+        write_json("research_territory.json", territory)
+
+        # Wider YouTube validation happens only after territory inference.
+        live_research = []
+        if (
+            reference_profiles
+            and territory.get("label")
+            and territory.get("label") != "Reference-channel territory"
+        ):
+            live_research = research_agent.collect_youtube(territory["label"])
+
+        # Local research is deliberately excluded from channel-intelligence
+        # runs so the configured channel niche cannot contaminate a universal
+        # research request.
+        research = research_agent.normalize(reference_research + live_research)
         STATE["research_count"] = len(research)
-        STATE["research_source"] = (
-            "Reference channels + YouTube + local research"
-            if reference_research and live_research
-            else "Reference channels + local research"
-            if reference_research
-            else "YouTube + local research"
-            if live_research
-            else "local research only — add YOUTUBE_API_KEY for live research"
-        )
+
+        if reference_research and live_research:
+            STATE["research_source"] = "Reference channels + wider YouTube validation"
+        elif reference_research:
+            STATE["research_source"] = "Reference channels"
+        elif live_research:
+            STATE["research_source"] = "Wider YouTube validation"
+        else:
+            STATE["research_source"] = (
+                "No live research collected — check channel URLs and YOUTUBE_API_KEY"
+            )
+
         STATE["completed_steps"].append("research")
 
-        # Intelligence currently requires an LLM API. Keep the local run useful
-        # without a key by allowing the deterministic opportunity engine to work
-        # from configured audience evidence and local research.
         intelligence = {}
-        STATE["current_step"] = "intelligence"
-        if os.getenv("ANTHROPIC_API_KEY"):
+        if os.getenv("ANTHROPIC_API_KEY") and research:
             from src.intelligence import IntelligenceAgent
-            intelligence = IntelligenceAgent(config).analyze(research, genre)
-            if isinstance(intelligence, dict):
-                intelligence["research_genre"] = genre
+
+            intelligence = IntelligenceAgent(config).analyze(
+                research,
+                territory,
+            )
             write_json("intelligence.json", intelligence)
         STATE["completed_steps"].append("intelligence")
 
         STATE["current_step"] = "opportunity"
-        opportunities = OpportunityEngine(config).generate(research, intelligence, genre)
+        opportunities = OpportunityEngine(config).generate(
+            research,
+            intelligence,
+            territory,
+        )
         STATE["opportunity_count"] = len(opportunities)
-        STATE["opportunities"] = [public_opportunity(x) for x in opportunities[:20]]
+        STATE["opportunities"] = [
+            public_opportunity(item) for item in opportunities[:20]
+        ]
         write_json("research.json", research)
         write_json("opportunities.json", opportunities)
         STATE["completed_steps"].append("opportunity")
@@ -199,7 +271,14 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         if path == "/api/run":
             if STATE["status"] == "running":
-                self.send_json({"ok": False, "message": "Overseer is already running.", "state": STATE}, 409)
+                self.send_json(
+                    {
+                        "ok": False,
+                        "message": "Overseer is already running.",
+                        "state": STATE,
+                    },
+                    409,
+                )
                 return
 
             length = int(self.headers.get("Content-Length", "0"))
@@ -209,21 +288,44 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 payload = {}
 
-            genre = str(payload.get("genre", "")).strip() or "AI productivity"
-            research_mode = str(payload.get("mode", "content_gap")).strip() or "content_gap"
+            research_mode = (
+                str(payload.get("mode", "channel_intelligence")).strip()
+                or "channel_intelligence"
+            )
             channel_urls = payload.get("channels", [])
             if isinstance(channel_urls, str):
-                channel_urls = [line.strip() for line in channel_urls.splitlines() if line.strip()]
+                channel_urls = [
+                    line.strip()
+                    for line in channel_urls.splitlines()
+                    if line.strip()
+                ]
             if not isinstance(channel_urls, list):
                 channel_urls = []
+
+            if not channel_urls:
+                self.send_json(
+                    {
+                        "ok": False,
+                        "message": "Add at least one reference YouTube channel.",
+                    },
+                    400,
+                )
+                return
 
             run_id = uuid.uuid4().hex[:10]
             threading.Thread(
                 target=run_overseer,
-                args=(run_id, genre, research_mode, channel_urls),
+                args=(run_id, research_mode, channel_urls),
                 daemon=True,
             ).start()
-            self.send_json({"ok": True, "run_id": run_id, "genre": genre, "mode": research_mode, "channels": channel_urls})
+            self.send_json(
+                {
+                    "ok": True,
+                    "run_id": run_id,
+                    "mode": research_mode,
+                    "channels": channel_urls,
+                }
+            )
             return
         self.send_error(404)
 
