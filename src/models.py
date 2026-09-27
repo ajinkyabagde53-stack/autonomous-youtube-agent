@@ -61,3 +61,18 @@ class ContentPlan:
     pillars: list[dict[str, Any]]
     series: list[dict[str, Any]]
     backlog: list[dict[str, Any]]
+
+
+@dataclass
+class ReferenceChannel:
+    url: str
+    channel_id: str = ""
+    title: str = ""
+    description: str = ""
+    subscriber_count: int = 0
+    video_count: int = 0
+    view_count: int = 0
+    country: str = ""
+    published_at: str = ""
+    uploads_playlist_id: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
