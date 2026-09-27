@@ -11,12 +11,10 @@ from .models import ChannelConfig, ReferenceChannel, ResearchItem
 
 
 class ResearchAgent:
-    """Research a user-selected genre.
+    """Collect research from user-selected reference channels.
 
-    Local Markdown/text research is always supported. If YOUTUBE_API_KEY is
-    configured, the agent also pulls a focused sample from YouTube so the
-    opportunity engine can reason about demand and competition inside the
-    selected genre rather than the whole channel niche.
+    The channels define the research territory. A separate intelligence step
+    can infer the territory before broader YouTube validation is performed.
     """
 
     def __init__(self, config: ChannelConfig, research_root: str = "research") -> None:
@@ -24,16 +22,19 @@ class ResearchAgent:
         self.research_root = Path(research_root)
 
     def collect(self, genre: str | None = None) -> list[ResearchItem]:
+        """Collect optional local research.
+
+        Kept for backwards compatibility. Live channel research is the primary
+        source when reference channels are supplied.
+        """
         selected_genre = (genre or self.config.niche).strip()
         if not self.research_root.exists():
             return []
 
         items: list[ResearchItem] = []
-
         for path in sorted(self.research_root.rglob("*")):
             if path.suffix.lower() not in {".md", ".txt"}:
                 continue
-
             text = path.read_text(encoding="utf-8").strip()
             if not text:
                 continue
@@ -46,7 +47,6 @@ class ResearchAgent:
                 ),
                 path.stem,
             )
-
             items.append(
                 ResearchItem(
                     source=path.parent.name,
@@ -56,7 +56,6 @@ class ResearchAgent:
                     metadata={"path": str(path), "genre": selected_genre},
                 )
             )
-
         return items
 
     def collect_reference_channel(
@@ -72,11 +71,13 @@ class ResearchAgent:
 
         channel_id = self._resolve_channel_id(channel_url)
         params = urllib.parse.urlencode({
-            "part": "snippet,statistics,contentDetails",
+            "part": "snippet,statistics,contentDetails,topicDetails",
             "id": channel_id,
             "key": api_key,
         })
-        payload = self._get_json(f"https://www.googleapis.com/youtube/v3/channels?{params}")
+        payload = self._get_json(
+            f"https://www.googleapis.com/youtube/v3/channels?{params}"
+        )
         channels = payload.get("items", [])
         if not channels:
             raise ValueError(f"Could not resolve YouTube channel: {channel_url}")
@@ -85,6 +86,7 @@ class ResearchAgent:
         snippet = channel.get("snippet", {})
         stats = channel.get("statistics", {})
         details = channel.get("contentDetails", {})
+        topics = channel.get("topicDetails", {}).get("topicCategories", [])
         uploads_id = details.get("relatedPlaylists", {}).get("uploads", "")
 
         profile = ReferenceChannel(
@@ -98,6 +100,7 @@ class ResearchAgent:
             country=snippet.get("country", ""),
             published_at=snippet.get("publishedAt", ""),
             uploads_playlist_id=uploads_id,
+            topic_categories=topics,
         )
 
         videos = self._collect_channel_videos(
@@ -151,7 +154,7 @@ class ResearchAgent:
         stats_payload = self._get_json(
             "https://www.googleapis.com/youtube/v3/videos?"
             + urllib.parse.urlencode({
-                "part": "snippet,statistics,contentDetails",
+                "part": "snippet,statistics,contentDetails,topicDetails",
                 "id": ",".join(video_ids),
                 "key": api_key,
             })
@@ -163,10 +166,12 @@ class ResearchAgent:
             video_id = item.get("contentDetails", {}).get("videoId")
             if not video_id:
                 continue
+
             video = stats_by_id.get(video_id, {})
             snippet = video.get("snippet", item.get("snippet", {}))
             stats = video.get("statistics", {})
-            published_at = snippet.get("publishedAt", "")
+            topic_categories = video.get("topicDetails", {}).get("topicCategories", [])
+
             results.append(
                 ResearchItem(
                     source=f"youtube:{channel_id}",
@@ -177,11 +182,13 @@ class ResearchAgent:
                     metadata={
                         "channel_id": channel_id,
                         "video_id": video_id,
-                        "published_at": published_at,
+                        "published_at": snippet.get("publishedAt", ""),
                         "view_count": int(stats.get("viewCount", 0) or 0),
                         "like_count": int(stats.get("likeCount", 0) or 0),
                         "comment_count": int(stats.get("commentCount", 0) or 0),
                         "duration": video.get("contentDetails", {}).get("duration", ""),
+                        "category_id": snippet.get("categoryId", ""),
+                        "topic_categories": topic_categories,
                     },
                 )
             )
@@ -231,45 +238,37 @@ class ResearchAgent:
 
     def collect_youtube(
         self,
-        genre: str,
+        territory: str,
         region_code: str = "US",
         max_results: int = 25,
     ) -> list[ResearchItem]:
-        """Collect a small, quota-conscious YouTube sample for a genre.
-
-        Three search queries are used to cover the genre, practical intent and
-        workflow intent. YouTube's search.list costs 1 quota unit per request;
-        one videos.list call enriches the returned IDs with view/like/comment
-        counts.
-        """
+        """Validate an inferred territory against the wider YouTube landscape."""
         api_key = os.getenv("YOUTUBE_API_KEY")
-        if not api_key:
+        if not api_key or not territory.strip():
             return []
 
-        genre = genre.strip()
+        territory = territory.strip()
         queries = [
-            genre,
-            f"{genre} how to",
-            f"{genre} workflow",
+            territory,
+            f"{territory} how to",
+            f"{territory} explained",
         ]
 
         found: dict[str, dict] = {}
         per_query = max(5, min(25, max_results // len(queries) + 1))
 
         for query in queries:
-            params = urllib.parse.urlencode(
-                {
-                    "part": "snippet",
-                    "q": query,
-                    "type": "video",
-                    "maxResults": per_query,
-                    "order": "relevance",
-                    "regionCode": region_code,
-                    "relevanceLanguage": "en",
-                    "safeSearch": "moderate",
-                    "key": api_key,
-                }
-            )
+            params = urllib.parse.urlencode({
+                "part": "snippet",
+                "q": query,
+                "type": "video",
+                "maxResults": per_query,
+                "order": "relevance",
+                "regionCode": region_code,
+                "relevanceLanguage": "en",
+                "safeSearch": "moderate",
+                "key": api_key,
+            })
             payload = self._get_json(
                 f"https://www.googleapis.com/youtube/v3/search?{params}"
             )
@@ -282,20 +281,16 @@ class ResearchAgent:
         if not ids:
             return []
 
-        params = urllib.parse.urlencode(
-            {
-                "part": "snippet,statistics",
-                "id": ",".join(ids),
-                "key": api_key,
-            }
-        )
+        params = urllib.parse.urlencode({
+            "part": "snippet,statistics",
+            "id": ",".join(ids),
+            "key": api_key,
+        })
         stats_payload = self._get_json(
             f"https://www.googleapis.com/youtube/v3/videos?{params}"
         )
-
         stats_by_id = {
-            item.get("id"): item
-            for item in stats_payload.get("items", [])
+            item.get("id"): item for item in stats_payload.get("items", [])
         }
 
         items: list[ResearchItem] = []
@@ -303,18 +298,15 @@ class ResearchAgent:
             result = found[video_id]
             snippet = result.get("snippet", {})
             stats = stats_by_id.get(video_id, {}).get("statistics", {})
-            title = snippet.get("title", "Untitled video")
-            url = f"https://www.youtube.com/watch?v={video_id}"
-
             items.append(
                 ResearchItem(
                     source="youtube",
-                    title=title,
-                    url=url,
+                    title=snippet.get("title", "Untitled video"),
+                    url=f"https://www.youtube.com/watch?v={video_id}",
                     summary=snippet.get("description", "")[:1200],
-                    topics=[genre],
+                    topics=[territory],
                     metadata={
-                        "genre": genre,
+                        "territory": territory,
                         "video_id": video_id,
                         "channel_title": snippet.get("channelTitle", ""),
                         "published_at": snippet.get("publishedAt", ""),
@@ -340,13 +332,10 @@ class ResearchAgent:
     def normalize(items: Iterable[ResearchItem]) -> list[ResearchItem]:
         seen: set[tuple[str, str]] = set()
         normalized: list[ResearchItem] = []
-
         for item in items:
             key = (item.source.lower(), item.title.lower())
             if key in seen:
                 continue
-
             seen.add(key)
             normalized.append(item)
-
         return normalized
