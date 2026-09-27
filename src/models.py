@@ -75,4 +75,5 @@ class ReferenceChannel:
     country: str = ""
     published_at: str = ""
     uploads_playlist_id: str = ""
+    topic_categories: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
