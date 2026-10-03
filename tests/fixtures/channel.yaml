@@ -1,0 +1,25 @@
+# Test-only channel config, so editing config/channel.yaml can't break tests.
+channel:
+  name: "Test Channel"
+  niche: "home cooking"
+  description: "A faceless channel about quick weeknight cooking."
+
+audience:
+  primary: "Busy people who cook at home"
+  pain_points:
+    - "No time to cook after work"
+    - "Meals get repetitive"
+
+content:
+  target_minutes: 8
+  pillars:
+    - "Quick dinners"
+    - "Meal prep"
+
+monetization:
+  primary: "future"
+
+constraints:
+  faceless: true
+  human_approval_before_publish: true
+  avoid_claims_without_evidence: true

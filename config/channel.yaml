@@ -1,0 +1,40 @@
+channel:
+  name: "Overseer"
+  niche: "AI tools and practical AI workflows"
+  description: "A faceless YouTube channel helping professionals understand, evaluate, and use AI tools and workflows to work smarter."
+
+audience:
+  primary: "Professionals aged 25–40 who want practical ways to use AI at work without becoming AI engineers"
+  pain_points:
+    - "Too many AI tools and no clear idea which ones are actually useful"
+    - "Want to save time and automate repetitive work"
+    - "Need practical AI workflows they can apply at work"
+    - "Struggle to separate useful AI products from hype"
+  sophistication: "beginner_to_intermediate"
+
+goals:
+  primary: "Build a high-quality YouTube audience"
+  secondary:
+    - "Create a repeatable autonomous content engine"
+    - "Build long-term monetization opportunities"
+    - "Develop a defensible library of practical AI content"
+
+content:
+  formats:
+    - "long_form"
+  target_minutes: 8
+  publishing_frequency_per_week: 3
+  pillars:
+    - "AI tools for work"
+    - "Practical AI workflows"
+    - "AI productivity and automation"
+    - "AI tool comparisons and use cases"
+
+monetization:
+  primary: "future"
+  offers: []
+
+constraints:
+  faceless: true
+  human_approval_before_publish: true
+  avoid_claims_without_evidence: true

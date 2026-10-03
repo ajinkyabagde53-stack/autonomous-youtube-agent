@@ -1,0 +1,28 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+
+# Local state: channel memory, published-video registry, analytics
+data/*
+!data/.gitkeep
+
+# Local research cache
+research/cache/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Overseer — YouTube research studio</title>
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try {
+      const theme = localStorage.getItem("overseer-theme");
+      if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17l.7 1.8 1.8.7-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 001.7 3h10.6a2 2 0 001.7-3l-5-9V3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0112 0v1M16 3.1a4 4 0 010 7.8M22 21v-1a6 6 0 00-4-5.6"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Primary">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span class="brand-text"><strong>Overseer</strong><span>YouTube research studio</span></span>
+      </div>
+      <nav class="nav" aria-label="Views">
+        <a href="#/new" data-nav="new"><svg class="icon"><use href="#i-spark"/></svg><span>New video</span></a>
+        <a href="#/opportunities" data-nav="opportunities"><svg class="icon"><use href="#i-list"/></svg><span>Opportunities</span><span class="nav-count" data-count="opportunities" hidden></span></a>
+        <a href="#/production" data-nav="production"><svg class="icon"><use href="#i-film"/></svg><span>Production</span></a>
+        <a href="#/learning" data-nav="learning"><svg class="icon"><use href="#i-chart"/></svg><span>Learning</span></a>
+      </nav>
+      <div class="sidebar-foot">
+        <p class="runtime" id="runtime-status"><span class="dot" aria-hidden="true"></span><span>Connecting…</span></p>
+        <p class="channel-name" id="channel-name"></p>
+        <button class="btn btn-ghost theme-toggle" id="theme-toggle" type="button">
+          <svg class="icon"><use href="#i-moon"/></svg><span>Theme</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <header class="runbar" id="runbar">
+        <div class="runbar-head">
+          <span class="badge" id="run-status">Ready</span>
+          <p class="runbar-title" id="run-title" aria-live="polite">Ready for a new video idea</p>
+          <span class="runbar-meta" id="run-meta"></span>
+        </div>
+        <ol class="stepper" id="stepper" aria-label="Run progress"></ol>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <!-- New video -->
+        <section class="view" data-view="new" aria-labelledby="new-title">
+          <div class="view-head">
+            <p class="eyebrow">New video</p>
+            <h1 id="new-title" tabindex="-1">What video do you want to make?</h1>
+            <p class="lede">Describe the topic and the kind of video. Overseer researches YouTube for evidence, then proposes angles you can produce.</p>
+          </div>
+
+          <div class="split">
+            <form class="card composer" id="brief-form" novalidate>
+              <div class="field">
+                <label for="prompt">Your idea</label>
+                <textarea id="prompt" name="prompt" rows="5" maxlength="2000" aria-describedby="prompt-help prompt-count" placeholder="e.g. A calm 10-minute documentary on why Japanese trains are never late. Include the 1964 Shinkansen; avoid clichéd stock footage."></textarea>
+                <div class="field-foot">
+                  <p class="help" id="prompt-help">Say what it's about, who it's for, and the style. The more specific, the better the search.</p>
+                  <p class="help count" id="prompt-count" aria-live="polite">0 / 2000</p>
+                </div>
+                <div class="examples" aria-label="Example ideas">
+                  <span class="help">Try:</span>
+                  <button type="button" class="chip-btn" data-example="A beginner-friendly tutorial on building a budget in a spreadsheet, under 10 minutes, upbeat and practical.">Budget tutorial</button>
+                  <button type="button" class="chip-btn" data-example="A calm documentary on why Japanese trains are never late. Include the 1964 Shinkansen.">Train documentary</button>
+                  <button type="button" class="chip-btn" data-example="A ranked list of the most useful AI tools for small business owners, honest about limitations.">AI tools list</button>
+                </div>
+              </div>
+
+              <fieldset class="field">
+                <legend>Kind of video</legend>
+                <div class="chips">
+                  <label class="chip"><input type="radio" name="format" value="" checked><span>Any</span></label>
+                  <label class="chip"><input type="radio" name="format" value="explainer"><span>Explainer</span></label>
+                  <label class="chip"><input type="radio" name="format" value="tutorial"><span>Tutorial</span></label>
+                  <label class="chip"><input type="radio" name="format" value="documentary"><span>Documentary</span></label>
+                  <label class="chip"><input type="radio" name="format" value="list"><span>List</span></label>
+                  <label class="chip"><input type="radio" name="format" value="commentary"><span>Commentary</span></label>
+                  <label class="chip"><input type="radio" name="format" value="review"><span>Review</span></label>
+                  <label class="chip"><input type="radio" name="format" value="short"><span>Short</span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="field">
+                <legend>Length</legend>
+                <div class="chips">
+                  <label class="chip"><input type="radio" name="length" value="" checked><span>Any</span></label>
+                  <label class="chip"><input type="radio" name="length" value="short"><span>Under 1 min</span></label>
+                  <label class="chip"><input type="radio" name="length" value="5-8"><span>5–8 min</span></label>
+                  <label class="chip"><input type="radio" name="length" value="8-15"><span>8–15 min</span></label>
+                  <label class="chip"><input type="radio" name="length" value="15+"><span>15+ min</span></label>
+                </div>
+              </fieldset>
+
+              <details class="field disclosure" id="channels-disclosure">
+                <summary><span>Reference channels</span><span class="optional">optional</span></summary>
+                <label for="channels" class="sr-only">Reference channels, one per line</label>
+                <textarea id="channels" name="channels" rows="3" aria-describedby="channels-help" placeholder="@channel or https://youtube.com/@channel — one per line"></textarea>
+                <p class="help" id="channels-help">Channels whose style or audience you want to learn from. On their own (no idea above), Overseer infers what they cover and finds gaps.</p>
+              </details>
+
+              <p class="mode-hint" id="mode-hint"><svg class="icon"><use href="#i-info"/></svg><span>Describe an idea, add channels, or both.</span></p>
+              <p class="form-error" id="form-error" role="alert" hidden></p>
+
+              <div class="form-actions">
+                <button class="btn btn-primary btn-lg" id="run-button" type="submit">
+                  <svg class="icon"><use href="#i-search"/></svg><span>Research this idea</span>
+                </button>
+                <p class="help">Uses roughly 300–600 YouTube API quota units of your 10,000 daily.</p>
+              </div>
+            </form>
+
+            <div class="stack" id="research-panel" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <!-- Opportunities -->
+        <section class="view" data-view="opportunities" aria-labelledby="opps-title" hidden>
+          <div class="view-head view-head-row">
+            <div>
+              <p class="eyebrow">Opportunities</p>
+              <h1 id="opps-title" tabindex="-1">Opportunities</h1>
+              <p class="lede" id="opps-lede">Ranked by the evidence collected in the latest run. Scores are relative, not predictions.</p>
+            </div>
+            <div class="segmented" id="tier-filter" role="group" aria-label="Filter opportunities">
+              <button type="button" data-filter="all" aria-pressed="true">All <span data-filter-count="all"></span></button>
+              <button type="button" data-filter="validated" aria-pressed="false">Validated <span data-filter-count="validated"></span></button>
+              <button type="button" data-filter="hypothesis" aria-pressed="false">Hypotheses <span data-filter-count="hypothesis"></span></button>
+            </div>
+          </div>
+          <div class="opp-list" id="opp-list"></div>
+        </section>
+
+        <!-- Production -->
+        <section class="view" data-view="production" aria-labelledby="prod-title" hidden>
+          <div id="production-root"></div>
+        </section>
+
+        <!-- Learning -->
+        <section class="view" data-view="learning" aria-labelledby="learn-title" hidden>
+          <div class="view-head view-head-row">
+            <div>
+              <p class="eyebrow">Learning</p>
+              <h1 id="learn-title" tabindex="-1">What your channel teaches Overseer</h1>
+              <p class="lede" id="learn-lede">Performance of your own published videos, fed back into future opportunities.</p>
+            </div>
+          </div>
+          <div id="learning-root"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Views">
+    <a href="#/new" data-nav="new"><svg class="icon"><use href="#i-spark"/></svg><span>New</span></a>
+    <a href="#/opportunities" data-nav="opportunities"><svg class="icon"><use href="#i-list"/></svg><span>Ideas</span><span class="nav-count" data-count="opportunities" hidden></span></a>
+    <a href="#/production" data-nav="production"><svg class="icon"><use href="#i-film"/></svg><span>Production</span></a>
+    <a href="#/learning" data-nav="learning"><svg class="icon"><use href="#i-chart"/></svg><span>Learning</span></a>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="app.js?v=5"></script>
+</body>
+</html>
